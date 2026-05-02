@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PyWrite — Online Python Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/display/autorefresh.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/keymap/sublime.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161f;
+    --surface2: #1a1e2a;
+    --border: #252836;
+    --accent: #00e5a0;
+    --accent2: #7c6af7;
+    --warn: #ff6b6b;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-ui: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    gap: 10px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.3px;
+  }
+  .logo-icon {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    color: #000;
+    font-weight: 800;
+  }
+  .logo span { color: var(--accent); }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .15s ease;
+    white-space: nowrap;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: #3d4255; background: var(--surface2); }
+
+  .btn-run {
+    background: var(--accent);
+    color: #000;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    box-shadow: 0 0 20px rgba(0,229,160,.25);
+  }
+  .btn-run:hover { background: #00ffb3; box-shadow: 0 0 28px rgba(0,229,160,.4); }
+  .btn-run:disabled { background: #1a3d30; color: #2a6650; cursor: not-allowed; box-shadow: none; }
+
+  .btn-stop {
+    background: var(--warn);
+    color: #fff;
+  }
+  .btn-stop:hover { background: #ff4444; }
+
+  .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  /* ── Main layout ── */
+  .workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    gap: 0;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 200px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width .2s;
+  }
+  .sidebar.collapsed { width: 0; overflow: hidden; }
+
+  .sidebar-section {
+    padding: 12px 10px 6px;
+  }
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    padding: 0 6px;
+    margin-bottom: 6px;
+  }
+  .snippet-list { display: flex; flex-direction: column; gap: 2px; }
+  .snippet {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all .1s;
+    font-family: var(--font-mono);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .snippet:hover { background: var(--surface2); color: var(--text); }
+  .snippet.active { background: rgba(0,229,160,.1); color: var(--accent); }
+
+  /* ── Editor area ── */
+  .editor-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .editor-tabs {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 12px;
+    gap: 2px;
+    height: 38px;
+    flex-shrink: 0;
+  }
+  .tab {
+    padding: 6px 14px;
+    border-radius: 6px 6px 0 0;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    transition: all .15s;
+  }
+  .tab.active { color: var(--text); border-color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--text); background: var(--surface2); }
+
+  /* CodeMirror overrides */
+  .CodeMirror {
+    font-family: var(--font-mono) !important;
+    font-size: 14px;
+    line-height: 1.7;
+    height: 100% !important;
+    background: var(--bg) !important;
+  }
+  .CodeMirror-scroll { padding-bottom: 80px; }
+  .CodeMirror-gutters { background: var(--bg) !important; border-right: 1px solid var(--border) !important; }
+  .CodeMirror-linenumber { color: #3d4255 !important; }
+  .CodeMirror-cursor { border-color: var(--accent) !important; }
+  .CodeMirror-selected { background: rgba(124,106,247,.2) !important; }
+  .CodeMirror-focused .CodeMirror-selected { background: rgba(124,106,247,.25) !important; }
+
+  .editor-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── Output panel ── */
+  .output-panel {
+    height: 36%;
+    min-height: 120px;
+    max-height: 70%;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .resize-handle {
+    height: 6px;
+    cursor: ns-resize;
+    background: transparent;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .resize-handle::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 50%;
+    transform: translateX(-50%);
+    width: 40px; height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    transition: background .15s;
+  }
+  .resize-handle:hover::after { background: var(--accent); }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    height: 36px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .output-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background .3s;
+  }
+  .status-dot.running { background: var(--accent); animation: pulse 1s infinite; }
+  .status-dot.error   { background: var(--warn); }
+  .status-dot.ok      { background: var(--accent); }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; } 50% { opacity: .3; }
+  }
+
+  .output-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.7;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .output-body::-webkit-scrollbar { width: 5px; }
+  .output-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .out-line { display: block; }
+  .out-line.stdout { color: #c8d0e0; }
+  .out-line.stderr { color: var(--warn); }
+  .out-line.info   { color: var(--accent); opacity: .7; font-style: italic; }
+  .out-line.timing { color: var(--accent2); font-style: italic; }
+  .out-line.welcome { color: var(--accent); }
+
+  /* Loading overlay */
+  #loading-overlay {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+    z-index: 999;
+    transition: opacity .4s;
+  }
+  #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+  .loader-logo { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+  .loader-logo span { color: var(--accent); }
+  .loader-bar {
+    width: 200px; height: 3px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .loader-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    width: 0%;
+    transition: width .3s ease;
+  }
+  .loader-text { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+
+  /* Input for stdin */
+  .stdin-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .stdin-prompt { color: var(--accent); font-family: var(--font-mono); font-size: 13px; }
+  #stdin-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  #stdin-input:focus { border-color: var(--accent); }
+  .stdin-row .btn { padding: 5px 12px; font-size: 12px; }
+
+  /* Keyboard shortcut badge */
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    .sidebar { display: none; }
+    .output-panel { height: 42%; }
+    .logo-text { display: none; }
+    .btn .btn-label { display: none; }
+    .btn { padding: 7px 10px; }
+    .kbd { display: none; }
+  }
+  @media (min-width: 700px) and (max-width: 1024px) {
+    .sidebar { width: 160px; }
+  }
+
+  /* Tooltip */
+  [data-tip] { position: relative; }
+  [data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Font size buttons */
+  .font-ctrl { display: flex; align-items: center; gap: 2px; }
+  .font-ctrl button {
+    width: 26px; height: 26px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .1s;
+  }
+  .font-ctrl button:hover { color: var(--text); border-color: #3d4255; }
+</style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loading-overlay">
+  <div class="loader-logo">Py<span>Write</span></div>
+  <div class="loader-bar"><div class="loader-fill" id="loader-fill"></div></div>
+  <div class="loader-text" id="loader-text">Initializing Python runtime…</div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">λ</div>
+    <span class="logo-text">Py<span>Write</span></span>
+  </div>
+
+  <div class="header-actions">
+    <div class="font-ctrl" data-tip="Font size">
+      <button onclick="changeFontSize(-1)" title="Decrease font">A-</button>
+      <button onclick="changeFontSize(1)"  title="Increase font">A+</button>
+    </div>
+    <button class="btn btn-ghost" onclick="clearOutput()" data-tip="Clear output">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      <span class="btn-label">Clear</span>
+    </button>
+    <button class="btn btn-ghost" onclick="downloadCode()" data-tip="Save .py file">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span class="btn-label">Save</span>
+    </button>
+    <button class="btn btn-run" id="run-btn" onclick="runCode()" disabled>
+      <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span class="btn-label">Run</span>
+      <span class="kbd">⌘↵</span>
+    </button>
+  </div>
+</header>
+
+<!-- Workspace -->
+<div class="workspace">
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Examples</div>
+      <div class="snippet-list">
+        <div class="snippet active" onclick="loadSnippet('hello')">hello world</div>
+        <div class="snippet" onclick="loadSnippet('fibonacci')">fibonacci</div>
+        <div class="snippet" onclick="loadSnippet('list_ops')">list ops</div>
+        <div class="snippet" onclick="loadSnippet('classes')">classes</div>
+        <div class="snippet" onclick="loadSnippet('decorators')">decorators</div>
+        <div class="snippet" onclick="loadSnippet('comprehension')">comprehension</div>
+        <div class="snippet" onclick="loadSnippet('recursion')">recursion</div>
+        <div class="snippet" onclick="loadSnippet('exceptions')">exceptions</div>
+        <div class="snippet" onclick="loadSnippet('generators')">generators</div>
+        <div class="snippet" onclick="loadSnippet('lambda')">lambda & map</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Libraries</div>
+      <div class="snippet-list">
+        <div class="snippet" onclick="loadSnippet('math')">math</div>
+        <div class="snippet" onclick="loadSnippet('random')">random</div>
+        <div class="snippet" onclick="loadSnippet('datetime')">datetime</div>
+        <div class="snippet" onclick="loadSnippet('json')">json</div>
+        <div class="snippet" onclick="loadSnippet('regex')">re / regex</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor-panel">
+    <div class="editor-tabs">
+      <div class="tab active">main.py</div>
+    </div>
+    <div class="editor-wrapper">
+      <textarea id="code-editor"></textarea>
+    </div>
+
+    <!-- Output -->
+    <div class="output-panel" id="output-panel">
+      <div class="resize-handle" id="resize-handle"></div>
+      <div class="output-header">
+        <div class="output-title">
+          <div class="status-dot" id="status-dot"></div>
+          Output
+        </div>
+        <button class="btn btn-ghost" onclick="clearOutput()" style="padding:4px 10px;font-size:11px;">Clear</button>
+      </div>
+      <div class="output-body" id="output"></div>
+      <div class="stdin-row" id="stdin-row" style="display:none;">
+        <span class="stdin-prompt">›</span>
+        <input id="stdin-input" type="text" placeholder="Enter input and press Enter…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <button class="btn btn-run" onclick="submitStdin()" style="padding:5px 12px;font-size:12px;">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pyodide -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+<script>
+// ── Snippets ─────────────────────────────────────────────────────────────────
+const SNIPPETS = {
+  hello: `# Hello, World!
+print("Hello, World!")
+print("Welcome to PyWrite 🐍")
+
+name = "Python"
+version = 3.12
+print(f"\\nRunning {name} {version}")
+`,
+  fibonacci: `# Fibonacci sequence
+def fibonacci(n):
+    a, b = 0, 1
+    result = []
+    for _ in range(n):
+        result.append(a)
+        a, b = b, a + b
+    return result
+
+# First 15 Fibonacci numbers
+nums = fibonacci(15)
+print("Fibonacci:", nums)
+print(f"Sum: {sum(nums)}")
+print(f"Max: {max(nums)}")
+`,
+  list_ops: `# List operations
+fruits = ["apple", "banana", "cherry", "date", "elderberry"]
+
+# Slicing
+print("First 3:", fruits[:3])
+print("Reversed:", fruits[::-1])
+
+# List comprehension
+upper = [f.upper() for f in fruits]
+print("Uppercase:", upper)
+
+# Filter
+long = [f for f in fruits if len(f) > 5]
+print("Long names:", long)
+
+# Sorting
+sorted_fruits = sorted(fruits, key=len)
+print("By length:", sorted_fruits)
+`,
+  classes: `# Object-Oriented Programming
+class Animal:
+    def __init__(self, name, sound):
+        self.name = name
+        self.sound = sound
+    
+    def speak(self):
+        return f"{self.name} says {self.sound}!"
+    
+    def __repr__(self):
+        return f"Animal({self.name!r})"
+
+class Dog(Animal):
+    def __init__(self, name):
+        super().__init__(name, "Woof")
+    
+    def fetch(self, item):
+        return f"{self.name} fetches the {item}!"
+
+animals = [
+    Dog("Rex"),
+    Animal("Cat", "Meow"),
+    Animal("Cow", "Moo"),
+]
+
+for a in animals:
+    print(a.speak())
+
+rex = animals[0]
+print(rex.fetch("ball"))
+`,
+  decorators: `# Decorators
+import time
+
+def timer(func):
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+        print(f"{func.__name__} took {(end-start)*1000:.2f}ms")
+        return result
+    return wrapper
+
+def memoize(func):
+    cache = {}
+    def wrapper(*args):
+        if args not in cache:
+            cache[args] = func(*args)
+        return cache[args]
+    return wrapper
+
+@timer
+@memoize
+def slow_fib(n):
+    if n <= 1: return n
+    return slow_fib(n-1) + slow_fib(n-2)
+
+print("fib(30) =", slow_fib(30))
+print("fib(30) =", slow_fib(30))  # cached!
+`,
+  comprehension: `# Comprehensions & Generator Expressions
+# List comprehension
+squares = [x**2 for x in range(1, 11)]
+print("Squares:", squares)
+
+# Nested comprehension
+matrix = [[i*j for j in range(1, 5)] for i in range(1, 5)]
+for row in matrix:
+    print(row)
+
+# Dict comprehension
+word_lengths = {w: len(w) for w in ["apple", "fig", "mango", "kiwi"]}
+print("\\nWord lengths:", word_lengths)
+
+# Set comprehension
+unique_mods = {x % 7 for x in range(50)}
+print("Unique mods of 7:", sorted(unique_mods))
+
+# Generator (memory efficient)
+gen = (x**3 for x in range(10))
+print("Cubes:", list(gen))
+`,
+  recursion: `# Recursion examples
+def factorial(n):
+    if n <= 1: return 1
+    return n * factorial(n - 1)
+
+def power(base, exp):
+    if exp == 0: return 1
+    if exp % 2 == 0:
+        half = power(base, exp // 2)
+        return half * half
+    return base * power(base, exp - 1)
+
+def flatten(lst):
+    result = []
+    for item in lst:
+        if isinstance(item, list):
+            result.extend(flatten(item))
+        else:
+            result.append(item)
+    return result
+
+print("10! =", factorial(10))
+print("2^20 =", power(2, 20))
+
+nested = [1, [2, 3, [4, 5]], [6, [7, [8, 9]]]]
+print("Flattened:", flatten(nested))
+`,
+  exceptions: `# Exception handling
+def safe_divide(a, b):
+    try:
+        result = a / b
+    except ZeroDivisionError:
+        return "Error: division by zero"
+    except TypeError as e:
+        return f"Error: {e}"
+    else:
+        return f"{a} / {b} = {result}"
+    finally:
+        pass  # Always runs
+
+print(safe_divide(10, 2))
+print(safe_divide(5, 0))
+print(safe_divide("a", 2))
+
+# Custom exception
+class ValidationError(Exception):
+    def __init__(self, field, message):
+        self.field = field
+        super().__init__(f"[{field}] {message}")
+
+try:
+    age = -5
+    if age < 0:
+        raise ValidationError("age", "Must be non-negative")
+except ValidationError as e:
+    print(f"Caught: {e}")
+`,
+  generators: `# Generators & Iterators
+def countdown(n):
+    while n > 0:
+        yield n
+        n -= 1
+    yield "Blast off! 🚀"
+
+print("Countdown:")
+for val in countdown(5):
+    print(" ", val)
+
+def infinite_primes():
+    """Infinite prime generator"""
+    def is_prime(n):
+        if n < 2: return False
+        for i in range(2, int(n**0.5)+1):
+            if n % i == 0: return False
+        return True
+    
+    n = 2
+    while True:
+        if is_prime(n):
+            yield n
+        n += 1
+
+# First 10 primes
+gen = infinite_primes()
+primes = [next(gen) for _ in range(10)]
+print("\\nFirst 10 primes:", primes)
+`,
+  lambda: `# Lambda, map, filter, reduce
+from functools import reduce
+
+numbers = list(range(1, 11))
+
+# map
+squared = list(map(lambda x: x**2, numbers))
+print("Squared:", squared)
+
+# filter
+evens = list(filter(lambda x: x % 2 == 0, numbers))
+print("Evens:", evens)
+
+# reduce
+product = reduce(lambda a, b: a * b, numbers)
+print("Product 1-10:", product)
+
+# sorted with key
+words = ["banana", "apple", "Fig", "date", "Cherry"]
+by_lower = sorted(words, key=lambda w: w.lower())
+print("Sorted:", by_lower)
+
+# Composing functions
+pipeline = lambda data: list(
+    map(lambda x: x**2,
+        filter(lambda x: x % 2 == 0, data))
+)
+print("Even squares:", pipeline(range(1, 11)))
+`,
+  math: `import math
+import cmath
+
+# Constants
+print(f"π = {math.pi:.6f}")
+print(f"e = {math.e:.6f}")
+print(f"τ = {math.tau:.6f}")
+
+# Functions
+print(f"\\nsqrt(2) = {math.sqrt(2):.6f}")
+print(f"log2(1024) = {math.log2(1024)}")
+print(f"sin(π/6) = {math.sin(math.pi/6):.6f}")
+print(f"factorial(10) = {math.factorial(10)}")
+print(f"gcd(48, 18) = {math.gcd(48, 18)}")
+
+# Complex numbers
+z = complex(3, 4)
+print(f"\\n|3+4i| = {abs(z)}")
+print(f"sqrt(-1) = {cmath.sqrt(-1)}")
+`,
+  random: `import random
+
+# Seed for reproducibility
+random.seed(42)
+
+print("Random float:", random.random())
+print("Range [1, 10]:", random.randint(1, 10))
+print("Uniform [0, 5]:", round(random.uniform(0, 5), 3))
+
+items = ["rock", "paper", "scissors"]
+print("\\nRandom choice:", random.choice(items))
+
+deck = list(range(1, 14))
+random.shuffle(deck)
+print("Shuffled deck:", deck[:7], "...")
+
+sample = random.sample(range(100), 5)
+print("Random sample:", sample)
+
+# Gaussian distribution
+scores = [round(random.gauss(70, 15)) for _ in range(10)]
+print("\\nTest scores:", scores)
+print(f"Average: {sum(scores)/len(scores):.1f}")
+`,
+  datetime: `from datetime import datetime, date, timedelta
+
+now = datetime.now()
+print("Now:", now.strftime("%Y-%m-%d %H:%M:%S"))
+print("Date:", date.today())
+
+# Arithmetic
+yesterday = now - timedelta(days=1)
+next_week = now + timedelta(weeks=1)
+print("Yesterday:", yesterday.strftime("%A, %B %d"))
+print("Next week:", next_week.strftime("%A, %B %d"))
+
+# Parsing
+dt = datetime.strptime("2025-07-04", "%Y-%m-%d")
+print(f"\\nJuly 4th falls on: {dt.strftime('%A')}")
+
+# Days until New Year
+today = date.today()
+new_year = date(today.year + 1, 1, 1)
+delta = new_year - today
+print(f"Days until New Year: {delta.days}")
+`,
+  json: `import json
+
+data = {
+    "name": "Alice",
+    "age": 30,
+    "skills": ["Python", "JavaScript", "Rust"],
+    "address": {
+        "city": "Wonderland",
+        "zip": "12345"
+    },
+    "active": True,
+    "score": 9.8
+}
+
+# Serialize
+json_str = json.dumps(data, indent=2)
+print("JSON:")
+print(json_str)
+
+# Deserialize
+parsed = json.loads(json_str)
+print(f"\\nName: {parsed['name']}")
+print(f"Skills: {', '.join(parsed['skills'])}")
+print(f"City: {parsed['address']['city']}")
+
+# Modifying
+parsed["skills"].append("Go")
+print(f"Updated skills: {parsed['skills']}")
+`,
+  regex: `import re
+
+text = "Call us at (555) 123-4567 or (800) 987-6543. Email: hello@example.com"
+
+# Find phone numbers
+phones = re.findall(r'\\(\\d{3}\\) \\d{3}-\\d{4}', text)
+print("Phone numbers:", phones)
+
+# Find emails
+emails = re.findall(r'[\\w.]+@[\\w.]+', text)
+print("Emails:", emails)
+
+# Substitution
+masked = re.sub(r'\\d{4}$', '****', phones[0])
+print("Masked:", masked)
+
+# Groups
+date_text = "Today is 2024-01-15 and tomorrow is 2024-01-16"
+dates = re.findall(r'(\\d{4})-(\\d{2})-(\\d{2})', date_text)
+for y, m, d in dates:
+    print(f"Date: {d}/{m}/{y}")
+
+# Splitting
+csv_line = 'Alice,  Bob,   Charlie,Dave'
+parts = re.split(r',\\s*', csv_line)
+print("Parts:", parts)
+`
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let pyodide = null;
+let editor  = null;
+let isRunning = false;
+let stdinResolver = null;
+let fontSize = 14;
+
+// ── CodeMirror init ───────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+    mode: 'python',
+    theme: 'dracula',
+    lineNumbers: true,
+    autoCloseBrackets: true,
+    matchBrackets: true,
+    indentUnit: 4,
+    tabSize: 4,
+    indentWithTabs: false,
+    lineWrapping: false,
+    keyMap: 'sublime',
+    autoRefresh: true,
+    extraKeys: {
+      'Cmd-Enter': runCode,
+      'Ctrl-Enter': runCode,
+      'Tab': (cm) => {
+        if (cm.somethingSelected()) cm.indentSelection('add');
+        else cm.replaceSelection('    ', 'end');
+      }
+    }
+  });
+
+  editor.setValue(SNIPPETS.hello);
+  initPyodide();
+  initResize();
+});
+
+// ── Pyodide ───────────────────────────────────────────────────────────────────
+async function initPyodide() {
+  const fill = document.getElementById('loader-fill');
+  const txt  = document.getElementById('loader-text');
+
+  try {
+    fill.style.width = '20%';
+    txt.textContent = 'Loading Pyodide (may take a moment)…';
+    pyodide = await loadPyodide();
+
+    fill.style.width = '80%';
+    txt.textContent = 'Setting up Python environment…';
+
+    // Setup stdout/stderr capture
+    pyodide.runPython(`
+import sys, io, traceback
+
+class _Capture(io.StringIO):
+    def __init__(self, cb):
+        super().__init__()
+        self._cb = cb
+    def write(self, s):
+        if s:
+            self._cb(s)
+        return len(s)
+    def flush(self): pass
+`);
+
+    fill.style.width = '100%';
+    txt.textContent = 'Ready!';
+
+    setTimeout(() => {
+      document.getElementById('loading-overlay').classList.add('hidden');
+      document.getElementById('run-btn').disabled = false;
+      editor.refresh();
+      printWelcome();
+    }, 350);
+
+  } catch(e) {
+    txt.textContent = 'Failed to load: ' + e.message;
+    fill.style.background = 'var(--warn)';
+  }
+}
+
+// ── Output helpers ────────────────────────────────────────────────────────────
+function printLine(text, cls='stdout') {
+  const out = document.getElementById('output');
+  // Split by newlines
+  const lines = text.split('\n');
+  lines.forEach((line, i) => {
+    if (i === lines.length - 1 && line === '') return;
+    const span = document.createElement('span');
+    span.className = 'out-line ' + cls;
+    span.textContent = line;
+    out.appendChild(span);
+  });
+  out.scrollTop = out.scrollHeight;
+}
+
+function printWelcome() {
+  const out = document.getElementById('output');
+  out.innerHTML = '';
+  printLine('PyWrite — Python 3.12 (Pyodide)', 'welcome');
+  printLine('Press ⌘+Enter or click Run to execute code.', 'info');
+  printLine('', 'stdout');
+}
+
+function clearOutput() {
+  document.getElementById('output').innerHTML = '';
+  setStatus('');
+}
+
+function setStatus(s) {
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot' + (s ? ' ' + s : '');
+}
+
+// ── Run code ──────────────────────────────────────────────────────────────────
+async function runCode() {
+  if (!pyodide || isRunning) return;
+  isRunning = true;
+  setStatus('running');
+  document.getElementById('run-btn').disabled = true;
+
+  clearOutput();
+  printLine('▶ Running…', 'info');
+
+  const code = editor.getValue();
+  const t0 = performance.now();
+
+  try {
+    // Redirect stdout/stderr
+    const captureScript = `
+import sys, io, builtins
+
+_stdout_lines = []
+_stderr_lines = []
+
+class _Out(io.StringIO):
+    def __init__(self, arr):
+        super().__init__()
+        self._arr = arr
+    def write(self, s):
+        self._arr.append(s)
+        return len(s)
+    def flush(self): pass
+
+sys.stdout = _Out(_stdout_lines)
+sys.stderr = _Out(_stderr_lines)
+`;
+    pyodide.runPython(captureScript);
+
+    // Run user code
+    await pyodide.runPythonAsync(code);
+
+    const elapsed = (performance.now() - t0).toFixed(1);
+
+    // Collect output
+    const stdoutLines = pyodide.globals.get('_stdout_lines').toJs();
+    const stderrLines = pyodide.globals.get('_stderr_lines').toJs();
+
+    // Restore
+    pyodide.runPython('import sys; sys.stdout = sys.__stdout__; sys.stderr = sys.__stderr__');
+
+    const outEl = document.getElementById('output');
+    outEl.innerHTML = '';
+
+    if (stdoutLines.length) {
+      stdoutLines.forEach(s => printLine(s, 'stdout'));
+    }
+    if (stderrLines.length) {
+      stderrLines.forEach(s => printLine(s, 'stderr'));
+      setStatus('error');
+    } else {
+      setStatus('ok');
+    }
+
+    if (stdoutLines.length === 0 && stderrLines.length === 0) {
+      printLine('(no output)', 'info');
+    }
+    printLine(`✓ Finished in ${elapsed}ms`, 'timing');
+
+  } catch(e) {
+    try { pyodide.runPython('import sys; sys.stdout = sys.__stdout__; sys.stderr = sys.__stderr__'); } catch(_) {}
+    
+    const outEl = document.getElementById('output');
+    outEl.innerHTML = '';
+    
+    // Format traceback
+    const msg = e.message || String(e);
+    msg.split('\n').forEach(line => printLine(line, 'stderr'));
+    setStatus('error');
+  }
+
+  isRunning = false;
+  document.getElementById('run-btn').disabled = false;
+}
+
+// ── Load snippet ──────────────────────────────────────────────────────────────
+function loadSnippet(key) {
+  if (!SNIPPETS[key]) return;
+  editor.setValue(SNIPPETS[key]);
+  clearOutput();
+  printLine(`Loaded: ${key}`, 'info');
+  document.querySelectorAll('.snippet').forEach(el => {
+    el.classList.toggle('active', el.textContent.trim().replace(/\s+/g,'-') === key ||
+      el.getAttribute('onclick') === `loadSnippet('${key}')`);
+  });
+}
+
+// ── Download ──────────────────────────────────────────────────────────────────
+function downloadCode() {
+  const code = editor.getValue();
+  const blob = new Blob([code], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'main.py';
+  a.click();
+}
+
+// ── Font size ─────────────────────────────────────────────────────────────────
+function changeFontSize(delta) {
+  fontSize = Math.min(24, Math.max(10, fontSize + delta));
+  document.querySelector('.CodeMirror').style.fontSize = fontSize + 'px';
+  editor.refresh();
+}
+
+// ── Resize output panel ───────────────────────────────────────────────────────
+function initResize() {
+  const handle = document.getElementById('resize-handle');
+  const panel  = document.getElementById('output-panel');
+  const workspace = document.querySelector('.workspace');
+  let startY, startH;
+
+  handle.addEventListener('mousedown', e => {
+    startY = e.clientY;
+    startH = panel.offsetHeight;
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', () => document.removeEventListener('mousemove', onMove), { once: true });
+  });
+
+  handle.addEventListener('touchstart', e => {
+    startY = e.touches[0].clientY;
+    startH = panel.offsetHeight;
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', () => document.removeEventListener('touchmove', onTouchMove), { once: true });
+  }, { passive: true });
+
+  function onMove(e) {
+    const delta = startY - e.clientY;
+    const newH  = Math.min(Math.max(80, startH + delta), workspace.offsetHeight - 100);
+    panel.style.height = newH + 'px';
+  }
+  function onTouchMove(e) {
+    e.preventDefault();
+    const delta = startY - e.touches[0].clientY;
+    const newH  = Math.min(Math.max(80, startH + delta), workspace.offsetHeight - 100);
+    panel.style.height = newH + 'px';
+  }
+}
+</script>
+</body>
+</html>
