@@ -216,7 +216,6 @@ header {
 .explorer-body::-webkit-scrollbar { width: 4px; }
 .explorer-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-/* ── Section header (collapsible) ── */
 .section-hdr {
   display: flex;
   align-items: center;
@@ -245,7 +244,6 @@ header {
 .section-body { display: flex; flex-direction: column; }
 .section-body.collapsed { display: none; }
 
-/* ── Folder row ── */
 .folder-row {
   display: flex;
   align-items: center;
@@ -276,7 +274,6 @@ header {
   white-space: nowrap;
 }
 
-/* ── File row ── */
 .file-list { display: flex; flex-direction: column; }
 .file-list.collapsed { display: none; }
 
@@ -291,9 +288,7 @@ header {
   position: relative;
 }
 .file-row:hover { background: var(--surface2); }
-.file-row.active {
-  background: rgba(0,229,160,.08);
-}
+.file-row.active { background: rgba(0,229,160,.08); }
 .file-row.active::before {
   content: '';
   position: absolute;
@@ -316,15 +311,6 @@ header {
 .file-row:not(.active) .file-name { color: var(--text2); }
 .file-row:hover .file-name { color: var(--text); }
 
-/* Modified dot */
-.file-modified {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--yellow);
-  flex-shrink: 0;
-}
-
-/* Workspace file (main.py) special styling */
 .ws-file-row {
   display: flex;
   align-items: center;
@@ -335,9 +321,7 @@ header {
   position: relative;
 }
 .ws-file-row:hover { background: var(--surface2); }
-.ws-file-row.active {
-  background: rgba(0,229,160,.08);
-}
+.ws-file-row.active { background: rgba(0,229,160,.08); }
 .ws-file-row.active::before {
   content: '';
   position: absolute;
@@ -377,7 +361,6 @@ header {
   min-width: 0;
 }
 
-/* ── Tab bar ── */
 .tab-bar {
   display: flex;
   align-items: stretch;
@@ -436,7 +419,6 @@ header {
   flex-shrink: 0;
 }
 
-/* Breadcrumb bar */
 .breadcrumb {
   display: flex;
   align-items: center;
@@ -453,7 +435,6 @@ header {
 .breadcrumb span { color: var(--text2); }
 .breadcrumb .sep { color: var(--text3); }
 
-/* CodeMirror */
 .CodeMirror {
   font-family: var(--mono) !important;
   font-size: 14px;
@@ -575,7 +556,6 @@ header {
 .out-line.timing { color: var(--purple); font-style: italic; }
 .out-line.welcome { color: var(--accent); font-weight: 500; }
 
-/* Inline stdin */
 .stdin-line {
   display: flex;
   align-items: center;
@@ -801,13 +781,11 @@ header {
     <div class="explorer-title">Explorer</div>
     <div class="explorer-body" id="explorer-body">
 
-      <!-- WORKSPACE section -->
       <div class="section-hdr" id="ws-hdr" onclick="toggleSection('ws')">
         <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         <span class="sec-label">Workspace</span>
       </div>
       <div class="section-body" id="ws-body">
-        <!-- Workspace files rendered by JS -->
         <div id="ws-files"></div>
         <div class="new-file-btn" onclick="createNewFile()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -815,13 +793,11 @@ header {
         </div>
       </div>
 
-      <!-- EXAMPLES section -->
       <div class="section-hdr" id="ex-hdr" onclick="toggleSection('ex')">
         <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         <span class="sec-label">Examples</span>
       </div>
       <div class="section-body" id="ex-body">
-        <!-- Folders rendered by JS -->
         <div id="ex-folders"></div>
       </div>
 
@@ -831,10 +807,8 @@ header {
   <!-- Editor Panel -->
   <div class="editor-panel">
 
-    <!-- Tab bar -->
     <div class="tab-bar" id="tab-bar"></div>
 
-    <!-- Breadcrumb -->
     <div class="breadcrumb" id="breadcrumb">
       <span>PyWrite</span>
       <span class="sep"> › </span>
@@ -895,9 +869,7 @@ header {
 // ─────────────────────────────────────────────────────────────────
 const EXAMPLE_FOLDERS = [
   {
-    id: 'basics',
-    label: 'basics',
-    icon: '📂',
+    id: 'basics', label: 'basics', icon: '📂',
     files: [
       { id: 'hello',    name: 'hello_world.py' },
       { id: 'fibonacci',name: 'fibonacci.py'   },
@@ -906,18 +878,14 @@ const EXAMPLE_FOLDERS = [
     ]
   },
   {
-    id: 'oop',
-    label: 'oop',
-    icon: '📂',
+    id: 'oop', label: 'oop', icon: '📂',
     files: [
       { id: 'classes',    name: 'classes.py'    },
       { id: 'decorators', name: 'decorators.py' },
     ]
   },
   {
-    id: 'advanced',
-    label: 'advanced',
-    icon: '📂',
+    id: 'advanced', label: 'advanced', icon: '📂',
     files: [
       { id: 'comprehension', name: 'comprehension.py' },
       { id: 'generators',    name: 'generators.py'    },
@@ -926,9 +894,7 @@ const EXAMPLE_FOLDERS = [
     ]
   },
   {
-    id: 'stdlib',
-    label: 'stdlib',
-    icon: '📂',
+    id: 'stdlib', label: 'stdlib', icon: '📂',
     files: [
       { id: 'math',     name: 'math.py'     },
       { id: 'random',   name: 'random.py'   },
@@ -964,16 +930,12 @@ print(f"Max: {max(nums)}")
 `,
   list_ops:`# List operations
 fruits = ["apple", "banana", "cherry", "date", "elderberry"]
-
 print("First 3:", fruits[:3])
 print("Reversed:", fruits[::-1])
-
 upper = [f.upper() for f in fruits]
 print("Uppercase:", upper)
-
 long = [f for f in fruits if len(f) > 5]
 print("Long names:", long)
-
 sorted_fruits = sorted(fruits, key=len)
 print("By length:", sorted_fruits)
 `,
@@ -1021,22 +983,18 @@ def slow_fib(n):
     return slow_fib(n-1) + slow_fib(n-2)
 
 print("fib(30) =", slow_fib(30))
-print("fib(30) =", slow_fib(30))  # cached!
+print("fib(30) =", slow_fib(30))
 `,
   comprehension:`# Comprehensions
 squares = [x**2 for x in range(1, 11)]
 print("Squares:", squares)
-
 matrix = [[i*j for j in range(1, 5)] for i in range(1, 5)]
 for row in matrix:
     print(row)
-
 word_lengths = {w: len(w) for w in ["apple", "fig", "mango", "kiwi"]}
 print("Word lengths:", word_lengths)
-
 unique_mods = {x % 7 for x in range(50)}
 print("Unique mods of 7:", sorted(unique_mods))
-
 gen = (x**3 for x in range(10))
 print("Cubes:", list(gen))
 `,
@@ -1116,29 +1074,24 @@ primes = [next(gen) for _ in range(10)]
 print("First 10 primes:", primes)
 `,
   lambda:`from functools import reduce
-
 numbers = list(range(1, 11))
 squared  = list(map(lambda x: x**2, numbers))
 print("Squared:", squared)
-
 evens = list(filter(lambda x: x % 2 == 0, numbers))
 print("Evens:", evens)
-
 product = reduce(lambda a, b: a * b, numbers)
 print("Product 1-10:", product)
-
 words = ["banana", "apple", "Fig", "date", "Cherry"]
 by_lower = sorted(words, key=lambda w: w.lower())
 print("Sorted:", by_lower)
 `,
   math:`import math
 import cmath
-
-print(f"π = {math.pi:.6f}")
+print(f"pi = {math.pi:.6f}")
 print(f"e = {math.e:.6f}")
 print(f"sqrt(2) = {math.sqrt(2):.6f}")
 print(f"log2(1024) = {math.log2(1024)}")
-print(f"sin(π/6) = {math.sin(math.pi/6):.6f}")
+print(f"sin(pi/6) = {math.sin(math.pi/6):.6f}")
 print(f"factorial(10) = {math.factorial(10)}")
 print(f"gcd(48, 18) = {math.gcd(48, 18)}")
 z = complex(3, 4)
@@ -1146,42 +1099,33 @@ print(f"|3+4i| = {abs(z)}")
 `,
   random:`import random
 random.seed(42)
-
 print("Random float:", random.random())
 print("Range [1, 10]:", random.randint(1, 10))
 print("Uniform [0, 5]:", round(random.uniform(0, 5), 3))
-
 items = ["rock", "paper", "scissors"]
 print("Choice:", random.choice(items))
-
 deck = list(range(1, 14))
 random.shuffle(deck)
 print("Shuffled deck:", deck[:7], "...")
-
 sample = random.sample(range(100), 5)
 print("Sample:", sample)
 `,
   datetime:`from datetime import datetime, date, timedelta
-
 now = datetime.now()
 print("Now:", now.strftime("%Y-%m-%d %H:%M:%S"))
 print("Date:", date.today())
-
 yesterday = now - timedelta(days=1)
 next_week = now + timedelta(weeks=1)
 print("Yesterday:", yesterday.strftime("%A, %B %d"))
 print("Next week:", next_week.strftime("%A, %B %d"))
-
 dt = datetime.strptime("2025-07-04", "%Y-%m-%d")
 print(f"July 4th falls on: {dt.strftime('%A')}")
-
 today = date.today()
 new_year = date(today.year + 1, 1, 1)
 delta = new_year - today
 print(f"Days until New Year: {delta.days}")
 `,
   json:`import json
-
 data = {
     "name": "Alice",
     "age": 30,
@@ -1189,30 +1133,22 @@ data = {
     "active": True,
     "score": 9.8
 }
-
 json_str = json.dumps(data, indent=2)
 print(json_str)
-
 parsed = json.loads(json_str)
 print(f"Name: {parsed['name']}")
 print(f"Skills: {', '.join(parsed['skills'])}")
-
 parsed["skills"].append("Go")
 print(f"Updated: {parsed['skills']}")
 `,
   regex:`import re
-
 text = "Call (555) 123-4567 or (800) 987-6543. Email: hello@example.com"
-
 phones = re.findall(r'\\(\\d{3}\\) \\d{3}-\\d{4}', text)
 print("Phone numbers:", phones)
-
 emails = re.findall(r'[\\w.]+@[\\w.]+', text)
 print("Emails:", emails)
-
 masked = re.sub(r'\\d{4}$', '****', phones[0])
 print("Masked:", masked)
-
 date_text = "Today is 2024-01-15 and tomorrow is 2024-01-16"
 dates = re.findall(r'(\\d{4})-(\\d{2})-(\\d{2})', date_text)
 for y, m, d in dates:
@@ -1231,14 +1167,12 @@ let stdinPromiseResolve = null;
 let currentStdinLine  = null;
 let currentStdinInput = null;
 
-// File tabs state
 let workspaceFiles = [
   { id: 'main', name: 'main.py', content: null, modified: false }
 ];
 let activeFileId = 'main';
-let openTabs = ['main']; // tab order
+let openTabs = ['main'];
 
-// Explorer section state
 const sectionOpen = { ws: true, ex: true };
 const folderOpen  = {};
 
@@ -1268,9 +1202,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Default main.py content
-  const defaultCode = `# Welcome to PyWrite! 🐍
-`;
+  const defaultCode = `# Welcome to PyWrite! 🐍\nprint("Hello, World!")\n`;
   workspaceFiles[0].content = defaultCode;
   editor.setValue(defaultCode);
 
@@ -1319,7 +1251,6 @@ function renderExampleFolders() {
   container.innerHTML = '';
   EXAMPLE_FOLDERS.forEach(folder => {
     const isOpen = folderOpen[folder.id] !== false;
-
     const folderRow = document.createElement('div');
     folderRow.className = 'folder-row' + (isOpen ? '' : ' collapsed');
     folderRow.onclick = () => toggleFolder(folder.id);
@@ -1345,7 +1276,6 @@ function renderExampleFolders() {
       `;
       fileList.appendChild(fileRow);
     });
-
     container.appendChild(fileList);
   });
 }
@@ -1384,22 +1314,18 @@ function renderTabs() {
   bar.innerHTML = '';
   openTabs.forEach(tabId => {
     const wsFile = workspaceFiles.find(f => f.id === tabId);
-    let name, isExample = false, folder = null;
-
+    let name;
     if (wsFile) {
       name = wsFile.name;
     } else if (tabId.startsWith('ex-')) {
       const key = tabId.slice(3);
       for (const f of EXAMPLE_FOLDERS) {
         const match = f.files.find(fi => fi.id === key);
-        if (match) { name = match.name; folder = f.label; break; }
+        if (match) { name = match.name; break; }
       }
-      isExample = true;
     }
-
-    const isActive = tabId === activeFileId;
+    const isActive   = tabId === activeFileId;
     const isModified = wsFile && wsFile.modified;
-
     const tab = document.createElement('div');
     tab.className = 'tab' + (isActive ? ' active' : '');
     tab.onclick = () => switchTab(tabId);
@@ -1411,15 +1337,12 @@ function renderTabs() {
     `;
     bar.appendChild(tab);
   });
-
   updateBreadcrumb();
 }
 
 function switchTab(tabId) {
-  // Save current editor content
   const current = workspaceFiles.find(f => f.id === activeFileId);
   if (current) current.content = editor.getValue();
-
   activeFileId = tabId;
   loadTabContent(tabId);
   renderTabs();
@@ -1475,7 +1398,6 @@ function updateBreadcrumb() {
 function openWorkspaceFile(fileId) {
   const current = workspaceFiles.find(f => f.id === activeFileId);
   if (current) current.content = editor.getValue();
-
   activeFileId = fileId;
   if (!openTabs.includes(fileId)) openTabs.push(fileId);
   loadTabContent(fileId);
@@ -1487,7 +1409,6 @@ function openExampleFile(folder, file) {
   const tabId = 'ex-' + file.id;
   const current = workspaceFiles.find(f => f.id === activeFileId);
   if (current) current.content = editor.getValue();
-
   activeFileId = tabId;
   if (!openTabs.includes(tabId)) openTabs.push(tabId);
   loadTabContent(tabId);
@@ -1525,6 +1446,7 @@ async function initPyodide() {
     pyodide.globals.set('_js_write', (msg) => { const t = String(msg); if (t) printLine(t, 'stdout'); });
     pyodide.globals.set('_js_error', (msg) => { const t = String(msg); if (t) printLine(t, 'stderr'); });
 
+    // Patch input() to be async
     pyodide.runPython(`
 import builtins
 async def _patched_input(prompt=''):
@@ -1533,36 +1455,121 @@ async def _patched_input(prompt=''):
 builtins.input = _patched_input
 `);
 
+    // ─────────────────────────────────────────────────────────────
+    // FIXED TRANSFORMER: Two-phase approach
+    //   Phase 1: scan all function defs to find which ones call
+    //            input() directly or transitively
+    //   Phase 2: make those functions async def AND await their calls
+    //   Then wrap entire module in async def __pywrite_main()
+    // ─────────────────────────────────────────────────────────────
     pyodide.runPython(`
 import ast
 
-class InputAwaiter(ast.NodeTransformer):
+def _find_async_funcs(tree):
+    """Return set of function names that directly or transitively call input()."""
+    func_direct_input = set()   # funcs that call input() directly
+    func_calls = {}             # fname -> set of called function names
+
+    class BodyScanner(ast.NodeVisitor):
+        """Scans a function body; does NOT recurse into nested function defs."""
+        def __init__(self):
+            self.calls = set()
+            self.uses_input = False
+        def visit_Call(self, node):
+            if isinstance(node.func, ast.Name):
+                if node.func.id == 'input':
+                    self.uses_input = True
+                else:
+                    self.calls.add(node.func.id)
+            self.generic_visit(node)
+        def visit_FunctionDef(self, node):
+            pass  # don't recurse into nested defs
+        def visit_AsyncFunctionDef(self, node):
+            pass
+
+    class TopScanner(ast.NodeVisitor):
+        def _handle_func(self, node):
+            sc = BodyScanner()
+            for s in node.body:
+                sc.visit(s)
+            func_calls[node.name] = sc.calls
+            if sc.uses_input:
+                func_direct_input.add(node.name)
+            # recurse to handle nested function definitions
+            for s in ast.walk(ast.Module(body=node.body, type_ignores=[])):
+                if isinstance(s, (ast.FunctionDef, ast.AsyncFunctionDef)) and s is not node:
+                    self._handle_func(s)
+        def visit_FunctionDef(self, node):
+            self._handle_func(node)
+        def visit_AsyncFunctionDef(self, node):
+            self._handle_func(node)
+
+    TopScanner().visit(tree)
+
+    # Propagate transitively: if A calls B and B is async, A must be async too
+    async_funcs = set(func_direct_input)
+    changed = True
+    while changed:
+        changed = False
+        for fname, calls in func_calls.items():
+            if fname not in async_funcs and calls & async_funcs:
+                async_funcs.add(fname)
+                changed = True
+    return async_funcs
+
+
+class _CodeTransformer(ast.NodeTransformer):
+    def __init__(self, async_funcs):
+        self.async_funcs = async_funcs
+
     def visit_Call(self, node):
         self.generic_visit(node)
-        if isinstance(node.func, ast.Name) and node.func.id == 'input':
-            return ast.Await(value=node)
-        if isinstance(node.func, ast.Attribute) and not isinstance(node.func.value, ast.Await):
-            if self._is_input_chain(node.func.value):
-                node.func.value = ast.Await(value=node.func.value)
-                return node
+        if isinstance(node.func, ast.Name):
+            # Await input() calls and calls to functions that became async
+            if node.func.id == 'input' or node.func.id in self.async_funcs:
+                new = ast.Await(value=node)
+                ast.copy_location(new, node)
+                ast.fix_missing_locations(new)
+                return new
         return node
 
-    def _is_input_chain(self, node):
-        if isinstance(node, ast.Call):
-            if isinstance(node.func, ast.Name) and node.func.id == 'input':
-                return True
-            if isinstance(node.func, ast.Attribute):
-                return self._is_input_chain(node.func.value)
-        return False
+    def visit_FunctionDef(self, node):
+        # Transform children first, then promote to async if needed
+        self.generic_visit(node)
+        if node.name in self.async_funcs:
+            new_node = ast.AsyncFunctionDef(
+                name=node.name,
+                args=node.args,
+                body=node.body,
+                decorator_list=node.decorator_list,
+                returns=node.returns,
+                type_comment=getattr(node, 'type_comment', None)
+            )
+            ast.copy_location(new_node, node)
+            ast.fix_missing_locations(new_node)
+            return new_node
+        return node
+
+    # Also visit bodies of existing async function defs
+    def visit_AsyncFunctionDef(self, node):
+        self.generic_visit(node)
+        return node
+
 
 def transform_input_calls(source):
     tree = ast.parse(source)
-    tree = InputAwaiter().visit(tree)
+    async_funcs = _find_async_funcs(tree)
+    transformer = _CodeTransformer(async_funcs)
+    tree = transformer.visit(tree)
     ast.fix_missing_locations(tree)
+
+    # Wrap everything in a top-level async function
     wrapper = ast.AsyncFunctionDef(
         name='__pywrite_main',
-        args=ast.arguments(posonlyargs=[], args=[], vararg=None,
-                           kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]),
+        args=ast.arguments(
+            posonlyargs=[], args=[], vararg=None,
+            kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[]
+        ),
         body=tree.body,
         decorator_list=[], returns=None, type_comment=None,
     )
@@ -1591,8 +1598,9 @@ def transform_input_calls(source):
 // ─────────────────────────────────────────────────────────────────
 function printLine(text, cls='stdout') {
   const out = document.getElementById('output');
-  text.split('\n').forEach((line, i, arr) => {
-    if (i === arr.length - 1 && line === '') return;
+  const lines = String(text).split('\n');
+  lines.forEach((line, i) => {
+    if (i === lines.length - 1 && line === '') return;
     const span = document.createElement('span');
     span.className = 'out-line ' + cls;
     span.textContent = line;
@@ -1611,7 +1619,8 @@ function printWelcome() {
 function clearOutput() {
   document.getElementById('output').innerHTML = '';
   setStatus('');
-  stdinPromiseResolve = null;
+  // Cancel any pending stdin
+  if (stdinPromiseResolve) { stdinPromiseResolve(''); stdinPromiseResolve = null; }
   currentStdinLine = null;
   currentStdinInput = null;
 }
@@ -1638,10 +1647,12 @@ function showInlineInput(promptText) {
   inp.className = 'stdin-inline-input';
   inp.placeholder = 'type here, press Enter…';
   inp.autocomplete = 'off';
-  inp.autocorrect = 'off';
+  inp.autocorrect  = 'off';
   inp.autocapitalize = 'off';
   inp.spellcheck = false;
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submitInlineInput(); } });
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); submitInlineInput(); }
+  });
 
   line.appendChild(prompt);
   line.appendChild(inp);
@@ -1678,9 +1689,9 @@ async function runCode() {
 
   const code = editor.getValue();
   const t0 = performance.now();
-  const NL = String.fromCharCode(10);
+  const NL = '\n';
 
-  // Build capture script without \n inside string literals
+  // Build stdout/stderr capture – written as an array to avoid \n in literals
   const captureLines = [
     'import sys, io',
     'class _Out(io.StringIO):',
@@ -1703,38 +1714,52 @@ async function runCode() {
   ];
   const captureScript = captureLines.join(NL);
 
+  // Only transform if the code uses input()
   let transformedCode = null;
   if (code.includes('input(')) {
     try {
       const transform = pyodide.globals.get('transform_input_calls');
       const result = transform(code);
-      transformedCode = result.toJs ? result.toJs() : String(result);
-      if (typeof result.destroy === 'function') result.destroy();
-    } catch(err) {
-      printLine('Transform error: ' + err.message, 'stderr');
+      transformedCode = result && result.toJs ? result.toJs() : String(result);
+      if (result && typeof result.destroy === 'function') result.destroy();
+    } catch (err) {
+      printLine('Transform error: ' + (err.message || String(err)), 'stderr');
+      isRunning = false;
+      setStatus('error');
+      document.getElementById('run-btn').disabled = false;
+      return;
     }
   }
 
   try {
     pyodide.runPython(captureScript);
     if (transformedCode) {
+      // Define __pywrite_main then run it
       pyodide.runPython(transformedCode);
       await pyodide.runPythonAsync('await __pywrite_main()');
     } else {
       await pyodide.runPythonAsync(code);
     }
-    try { pyodide.runPython('import sys; sys.stdout=sys.__stdout__; sys.stderr=sys.__stderr__'); } catch(_){}
+    // Restore stdout/stderr
+    try { pyodide.runPython('import sys; sys.stdout.flush(); sys.stderr.flush(); sys.stdout=sys.__stdout__; sys.stderr=sys.__stderr__'); } catch(_){}
     const elapsed = (performance.now() - t0).toFixed(1);
     setStatus('ok');
     printLine('✓ Done in ' + elapsed + 'ms', 'timing');
-  } catch(e) {
+  } catch (e) {
     try { pyodide.runPython('import sys; sys.stdout=sys.__stdout__; sys.stderr=sys.__stderr__'); } catch(_){}
-    (e.message || String(e)).split('\n').forEach(l => printLine(l, 'stderr'));
+    const msg = e.message || String(e);
+    msg.split('\n').forEach(l => { if (l) printLine(l, 'stderr'); });
     setStatus('error');
   }
 
-  if (currentStdinInput) { currentStdinInput.disabled = true; currentStdinInput.placeholder = '(ended)'; }
-  stdinPromiseResolve = null; currentStdinLine = null; currentStdinInput = null;
+  // Clean up any dangling stdin input
+  if (currentStdinInput) {
+    currentStdinInput.disabled = true;
+    currentStdinInput.placeholder = '(execution ended)';
+  }
+  stdinPromiseResolve = null;
+  currentStdinLine   = null;
+  currentStdinInput  = null;
   isRunning = false;
   document.getElementById('run-btn').disabled = false;
 }
@@ -1750,6 +1775,7 @@ function downloadCode() {
   a.href = URL.createObjectURL(blob);
   a.download = name;
   a.click();
+  URL.revokeObjectURL(a.href); // clean up object URL
 }
 
 function changeFontSize(d) {
@@ -1764,7 +1790,8 @@ function initResize() {
   const ws     = document.querySelector('.workspace');
   let startY, startH;
   handle.addEventListener('mousedown', e => {
-    startY = e.clientY; startH = panel.offsetHeight;
+    startY = e.clientY;
+    startH = panel.offsetHeight;
     const onMove = e2 => {
       const newH = Math.min(Math.max(80, startH + startY - e2.clientY), ws.offsetHeight - 100);
       panel.style.height = newH + 'px';
@@ -1777,20 +1804,25 @@ function initResize() {
 // ─────────────────────────────────────────────────────────────────
 // LOGIN + AI
 // ─────────────────────────────────────────────────────────────────
-const LOGIN_PW   = 'groq';
-const GROQ_KEY   = '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';
+const LOGIN_PW = 'groq';
+const GROQ_KEY = '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';
 let aiMsgs = [];
 let logoClicks = 0, logoTimer = null;
 
 function initLogin() {
-  document.getElementById('login-pw').addEventListener('keydown', e => { if (e.key === 'Enter') submitLogin(); });
+  document.getElementById('login-pw').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitLogin();
+  });
 }
+
 function submitLogin() {
   if (document.getElementById('login-pw').value === LOGIN_PW) {
     localStorage.setItem('pywrite_auth', '1');
     document.getElementById('login-overlay').classList.add('hidden');
     openAI();
-  } else { document.getElementById('login-err').textContent = 'Wrong password.'; }
+  } else {
+    document.getElementById('login-err').textContent = 'Wrong password.';
+  }
 }
 
 function logoClick() {
@@ -1802,6 +1834,7 @@ function logoClick() {
   logoTimer = setTimeout(() => { logoClicks = 0; }, 800);
   if (logoClicks >= 5) { logoClicks = 0; openAI(); }
 }
+
 function openAI() {
   if (localStorage.getItem('pywrite_auth') !== '1') {
     document.getElementById('login-overlay').classList.remove('hidden');
@@ -1810,7 +1843,10 @@ function openAI() {
   document.getElementById('ai-panel').classList.add('open');
   setTimeout(() => document.getElementById('ai-input').focus(), 100);
 }
-function closeAI() { document.getElementById('ai-panel').classList.remove('open'); }
+
+function closeAI() {
+  document.getElementById('ai-panel').classList.remove('open');
+}
 
 function appendMsg(role, text) {
   const box = document.getElementById('ai-msgs');
@@ -1826,7 +1862,8 @@ async function sendAI() {
   const inp = document.getElementById('ai-input');
   const text = inp.value.trim();
   if (!text) return;
-  inp.value = ''; inp.style.height = 'auto';
+  inp.value = '';
+  inp.style.height = 'auto';
   document.getElementById('ai-send').disabled = true;
   appendMsg('user', text);
   aiMsgs.push({ role: 'user', content: text });
@@ -1847,13 +1884,15 @@ async function sendAI() {
     });
     const data = await res.json();
     thinking.remove();
-    if (data.error) { appendMsg('sys', '⚠ ' + data.error.message); aiMsgs.pop(); }
-    else {
+    if (data.error) {
+      appendMsg('sys', '⚠ ' + data.error.message);
+      aiMsgs.pop();
+    } else {
       const reply = data.choices?.[0]?.message?.content || 'No response.';
       aiMsgs.push({ role: 'assistant', content: reply });
       appendMsg('assistant', reply);
     }
-  } catch(e) {
+  } catch (e) {
     thinking.remove();
     appendMsg('sys', '⚠ ' + e.message);
     aiMsgs.pop();
@@ -1863,11 +1902,20 @@ async function sendAI() {
 }
 
 function initAI() {
-  document.getElementById('ai-panel').addEventListener('click', e => { if (e.target.id === 'ai-panel') closeAI(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('ai-panel').classList.contains('open')) closeAI(); });
+  document.getElementById('ai-panel').addEventListener('click', e => {
+    if (e.target.id === 'ai-panel') closeAI();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('ai-panel').classList.contains('open')) closeAI();
+  });
   const inp = document.getElementById('ai-input');
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAI(); } });
-  inp.addEventListener('input', () => { inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 110) + 'px'; });
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAI(); }
+  });
+  inp.addEventListener('input', () => {
+    inp.style.height = 'auto';
+    inp.style.height = Math.min(inp.scrollHeight, 110) + 'px';
+  });
 }
 </script>
 </body>
