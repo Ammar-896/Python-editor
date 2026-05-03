@@ -707,6 +707,78 @@ header {
 .login-row input:focus { border-color:var(--purple); }
 .login-err { min-height:16px; margin-top:8px; color:var(--warn); font-size:12px; font-family:var(--mono); }
 
+/* ─── OUTPUT TABS ────────────────────────────────────────────── */
+.output-tab-static {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 16px;
+  height: 100%;
+  font-size: 11px;
+  font-family: var(--mono);
+  font-weight: 500;
+  color: var(--text2);
+  border-bottom: 2px solid var(--accent);
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  background: transparent;
+  border-left: none; border-right: none; border-top: none;
+  transition: color .15s;
+}
+.output-tab-static:hover { color: var(--text); }
+.output-tab-static.active { color: var(--text); border-bottom-color: var(--accent); }
+.output-tab-static.tab-canvas-btn { border-bottom-color: transparent; color: var(--text3); }
+.output-tab-static.tab-canvas-btn:hover { color: var(--text2); border-bottom-color: var(--border2); }
+.output-tab-static.tab-canvas-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+/* ─── TKINTER CANVAS CONTAINER ───────────────────────────────── */
+#tk-container {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a2e;
+  overflow: auto;
+  position: relative;
+  padding: 12px;
+}
+#tk-container.visible { display: flex; }
+
+#tk-render {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 8px;
+}
+#tk-render.visible { display: flex; }
+
+.tk-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.tk-placeholder svg { opacity: .3; }
+.tk-placeholder span { opacity: .6; }
+
+.tk-loading-msg {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  color: var(--blue);
+  font-family: var(--mono);
+  font-size: 12px;
+  animation: pulse 1.2s infinite;
+}
+.tk-loading-msg.visible { display: flex; }
+.tk-loading-msg svg { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ─── RESPONSIVE ─────────────────────────────────────────────── */
 @media (max-width: 700px) {
   .activity-bar { display:none; }
@@ -825,10 +897,14 @@ header {
     <div class="output-panel" id="output-panel">
       <div class="resize-handle" id="resize-handle"></div>
       <div class="output-header">
-        <div class="output-tab">
+        <button class="output-tab-static active" id="tab-terminal" onclick="switchOutputTab('terminal')">
           <div class="status-dot" id="status-dot"></div>
           Terminal
-        </div>
+        </button>
+        <button class="output-tab-static tab-canvas-btn" id="tab-canvas" onclick="switchOutputTab('canvas')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Canvas
+        </button>
         <div class="output-actions">
           <button class="out-action-btn" onclick="clearOutput()" title="Clear">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
@@ -836,6 +912,17 @@ header {
         </div>
       </div>
       <div class="output-body" id="output"></div>
+      <div id="tk-container">
+        <div class="tk-placeholder" id="tk-placeholder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>Run a tkinter script to render the GUI here</span>
+        </div>
+        <div class="tk-loading-msg" id="tk-loading-msg">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          Loading tkinter package…
+        </div>
+        <div id="tk-render" style="display:flex;align-items:center;justify-content:center;width:100%;padding:8px;"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -891,6 +978,14 @@ const EXAMPLE_FOLDERS = [
       { id: 'generators',    name: 'generators.py'    },
       { id: 'exceptions',    name: 'exceptions.py'    },
       { id: 'lambda',        name: 'lambda_map.py'    },
+    ]
+  },
+  {
+    id: 'tkinter', label: 'tkinter', icon: '🖼',
+    files: [
+      { id: 'tk_hello',   name: 'tk_hello.py'   },
+      { id: 'tk_counter', name: 'tk_counter.py' },
+      { id: 'tk_canvas',  name: 'tk_canvas.py'  },
     ]
   },
   {
@@ -1153,6 +1248,120 @@ date_text = "Today is 2024-01-15 and tomorrow is 2024-01-16"
 dates = re.findall(r'(\\d{4})-(\\d{2})-(\\d{2})', date_text)
 for y, m, d in dates:
     print(f"Date: {d}/{m}/{y}")
+`,
+  tk_hello:`import tkinter as tk
+
+root = tk.Tk()
+root.title("Hello, tkinter!")
+root.geometry("360x220")
+root.configure(bg="#1e1e2e")
+
+tk.Label(
+    root, text="Hello from tkinter! 🐍",
+    font=("Helvetica", 18, "bold"),
+    fg="#cdd6f4", bg="#1e1e2e"
+).pack(pady=30)
+
+name_var = tk.StringVar()
+tk.Entry(
+    root, textvariable=name_var,
+    font=("Helvetica", 13),
+    bg="#313244", fg="#cdd6f4",
+    insertbackground="#cdd6f4",
+    relief="flat", width=22
+).pack(pady=6)
+
+def greet():
+    n = name_var.get().strip() or "World"
+    lbl.config(text=f"Hi, {n}!")
+
+lbl = tk.Label(root, text="", font=("Helvetica", 13),
+               fg="#a6e3a1", bg="#1e1e2e")
+lbl.pack(pady=4)
+
+tk.Button(
+    root, text="Greet", command=greet,
+    bg="#89b4fa", fg="#1e1e2e",
+    activebackground="#74c7ec",
+    font=("Helvetica", 11, "bold"),
+    relief="flat", padx=16, pady=5
+).pack(pady=8)
+
+root.mainloop()
+`,
+  tk_counter:`import tkinter as tk
+
+root = tk.Tk()
+root.title("Counter")
+root.geometry("300x200")
+root.configure(bg="#1e1e2e")
+root.resizable(False, False)
+
+count = tk.IntVar(value=0)
+
+tk.Label(root, text="Counter", font=("Helvetica", 14, "bold"),
+         fg="#cdd6f4", bg="#1e1e2e").pack(pady=(20, 4))
+
+lbl = tk.Label(root, textvariable=count,
+               font=("Helvetica", 42, "bold"),
+               fg="#89dceb", bg="#1e1e2e", width=4)
+lbl.pack()
+
+frame = tk.Frame(root, bg="#1e1e2e")
+frame.pack(pady=12)
+
+def dec(): count.set(count.get() - 1)
+def inc(): count.set(count.get() + 1)
+def rst(): count.set(0)
+
+btn_style = dict(font=("Helvetica", 14, "bold"), relief="flat",
+                 padx=14, pady=4, cursor="hand2")
+tk.Button(frame, text="−", command=dec, bg="#f38ba8", fg="#1e1e2e",
+          **btn_style).grid(row=0, column=0, padx=4)
+tk.Button(frame, text="0", command=rst, bg="#585b70", fg="#cdd6f4",
+          **btn_style).grid(row=0, column=1, padx=4)
+tk.Button(frame, text="+", command=inc, bg="#a6e3a1", fg="#1e1e2e",
+          **btn_style).grid(row=0, column=2, padx=4)
+
+root.mainloop()
+`,
+  tk_canvas:`import tkinter as tk
+import math
+
+root = tk.Tk()
+root.title("Canvas Drawing")
+root.geometry("480x380")
+root.configure(bg="#1e1e2e")
+
+c = tk.Canvas(root, width=460, height=300,
+              bg="#181825", highlightthickness=0)
+c.pack(padx=10, pady=10)
+
+# Draw colour wheel
+cx, cy, r = 230, 150, 110
+for angle in range(0, 360, 2):
+    rad = math.radians(angle)
+    h = angle / 360
+    # HSV to RGB (simple version)
+    import colorsys
+    rgb = colorsys.hsv_to_rgb(h, 0.85, 0.95)
+    hex_col = "#{:02x}{:02x}{:02x}".format(
+        int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
+    x1 = cx + (r-14) * math.cos(rad)
+    y1 = cy + (r-14) * math.sin(rad)
+    x2 = cx + r * math.cos(rad)
+    y2 = cy + r * math.sin(rad)
+    c.create_line(x1, y1, x2, y2, fill=hex_col, width=3)
+
+c.create_oval(cx-35, cy-35, cx+35, cy+35,
+              fill="#1e1e2e", outline="#313244", width=2)
+c.create_text(cx, cy, text="🎨", font=("Helvetica", 22))
+
+status = tk.Label(root, text="Colour Wheel — rendered with tkinter Canvas",
+                  font=("Helvetica", 11), fg="#6c7086", bg="#1e1e2e")
+status.pack()
+
+root.mainloop()
 `
 };
 
@@ -1166,6 +1375,8 @@ let fontSize = 14;
 let stdinPromiseResolve = null;
 let currentStdinLine  = null;
 let currentStdinInput = null;
+let tkLoaded = false;        // whether the 'tk' Pyodide package is loaded
+let activeOutputTab = 'terminal';  // 'terminal' | 'canvas'
 
 let workspaceFiles = [
   { id: 'main', name: 'main.py', content: null, modified: false }
@@ -1175,6 +1386,20 @@ let openTabs = ['main'];
 
 const sectionOpen = { ws: true, ex: true };
 const folderOpen  = {};
+
+// ─────────────────────────────────────────────────────────────────
+// OUTPUT TAB SWITCHING
+// ─────────────────────────────────────────────────────────────────
+function switchOutputTab(tab) {
+  activeOutputTab = tab;
+  const isTerminal = tab === 'terminal';
+  document.getElementById('output').style.display = isTerminal ? '' : 'none';
+  const tkContainer = document.getElementById('tk-container');
+  tkContainer.classList.toggle('visible', !isTerminal);
+  document.getElementById('tab-terminal').classList.toggle('active', isTerminal);
+  const canvasTab = document.getElementById('tab-canvas');
+  canvasTab.classList.toggle('active', !isTerminal);
+}
 
 // ─────────────────────────────────────────────────────────────────
 // INIT
@@ -1580,6 +1805,7 @@ def transform_input_calls(source):
 
     fill.style.width = '100%';
     txt.textContent = 'Ready!';
+
     setTimeout(() => {
       document.getElementById('loading-overlay').classList.add('hidden');
       document.getElementById('run-btn').disabled = false;
@@ -1623,6 +1849,13 @@ function clearOutput() {
   if (stdinPromiseResolve) { stdinPromiseResolve(''); stdinPromiseResolve = null; }
   currentStdinLine = null;
   currentStdinInput = null;
+  // Reset Canvas tab
+  const tkRender = document.getElementById('tk-render');
+  if (tkRender) { tkRender.innerHTML = ''; tkRender.classList.remove('visible'); }
+  const tkPh = document.getElementById('tk-placeholder');
+  if (tkPh) tkPh.style.display = '';
+  // Switch back to terminal tab
+  switchOutputTab('terminal');
 }
 
 function setStatus(s) {
@@ -1679,6 +1912,862 @@ function submitInlineInput() {
 // ─────────────────────────────────────────────────────────────────
 // RUN CODE
 // ─────────────────────────────────────────────────────────────────
+function hasTkinterImport(code) {
+  return /^\s*(import\s+tkinter|from\s+tkinter\b)/m.test(code);
+}
+
+// ─── pure-Python HTML tkinter mock ───────────────────────────────────────────
+// All module-level helpers use single underscores to avoid Python's class-body
+// name-mangling (which silently renames __foo → _ClassName__foo).
+const TK_MOCK_PY = `
+import sys as _sys, types as _types
+import js as _js
+from pyodide.ffi import create_proxy as _create_proxy
+
+# ── Helpers ───────────────────────────────────────────────────────
+_proxies = []   # keep proxies alive so GC doesn't collect them
+
+def _css_font(f):
+    if not isinstance(f, (list, tuple)):
+        return None
+    fam = str(f[0]) if f else 'Helvetica'
+    sz  = str(f[1]) + 'px' if len(f) > 1 else '14px'
+    wt  = 'bold'   if len(f) > 2 and 'bold'   in str(f[2]).lower() else 'normal'
+    st  = 'italic' if len(f) > 2 and 'italic' in str(f[2]).lower() else 'normal'
+    return {'family': fam, 'size': sz, 'weight': wt, 'style': st}
+
+def _apply_style(el, kw):
+    if not el: return
+    bg = kw.get('bg', kw.get('background'))
+    if bg is not None: el.style.backgroundColor = str(bg)
+    fg = kw.get('fg', kw.get('foreground'))
+    if fg is not None: el.style.color = str(fg)
+    fnt = kw.get('font')
+    if fnt:
+        f = _css_font(fnt)
+        if f:
+            el.style.fontFamily = f['family']
+            el.style.fontSize   = f['size']
+            el.style.fontWeight = f['weight']
+            el.style.fontStyle  = f['style']
+    rel = kw.get('relief')
+    if rel == 'raised': el.style.boxShadow = '1px 1px 2px rgba(255,255,255,.2),-1px -1px 2px rgba(0,0,0,.4)'
+    elif rel == 'sunken': el.style.boxShadow = 'inset 1px 1px 3px rgba(0,0,0,.4)'
+    elif rel in ('flat','groove','ridge'): el.style.boxShadow = 'none'
+    if kw.get('cursor') == 'hand2': el.style.cursor = 'pointer'
+    padx = kw.get('padx')
+    pady = kw.get('pady')
+    if padx is not None or pady is not None:
+        def _px(v): return (str(v) + 'px') if v is not None else '0'
+        el.style.padding = (_px(pady) + ' ' + _px(padx)) if (padx or pady) else ''
+    if kw.get('highlightthickness') == 0: el.style.outline = 'none'
+    ibc = kw.get('insertbackground')
+    if ibc: el.style.caretColor = str(ibc)
+
+_wc = [0]
+def _nid():
+    _wc[0] += 1
+    return 'tkw' + str(_wc[0])
+
+def _render():
+    return _js.document.getElementById('tk-render')
+
+# ── Tk variable classes ───────────────────────────────────────────
+class Variable:
+    def __init__(self, val=None):
+        self._v  = val
+        self._tw = []   # widgets to notify
+        self._cb = []   # trace callbacks
+    def get(self): return self._v
+    def set(self, v):
+        self._v = v
+        for w in self._tw:
+            try: w._var_changed()
+            except: pass
+        for f in self._cb:
+            try: f()
+            except: pass
+    def trace(self, m, f):     self._cb.append(f)
+    def trace_add(self, m, f): self._cb.append(f)
+
+class StringVar(Variable):
+    def __init__(self, master=None, value='', name=None): super().__init__(str(value))
+    def set(self, v): super().set(str(v))
+
+class IntVar(Variable):
+    def __init__(self, master=None, value=0, name=None): super().__init__(int(value))
+    def set(self, v): super().set(int(v))
+    def get(self): return int(self._v) if self._v is not None else 0
+
+class DoubleVar(Variable):
+    def __init__(self, master=None, value=0.0, name=None): super().__init__(float(value))
+    def set(self, v): super().set(float(v))
+
+class BooleanVar(Variable):
+    def __init__(self, master=None, value=False, name=None): super().__init__(bool(value))
+    def set(self, v): super().set(bool(v))
+    def get(self): return bool(self._v)
+
+# ── Misc base ─────────────────────────────────────────────────────
+class Misc:
+    def mainloop(self, n=0): pass
+    def update(self): pass
+    def update_idletasks(self): pass
+    def after(self, ms, func=None, *args):
+        if func:
+            p = _create_proxy(lambda: func(*args))
+            _proxies.append(p)
+            _js.setTimeout(p, ms)
+    def destroy(self):
+        el = getattr(self, '_el', None)
+        if el:
+            try: el.remove()
+            except: pass
+    def protocol(self, name, func=None): pass
+    def bind(self, ev, cb, add=None): pass
+    def unbind(self, ev): pass
+    def winfo_width(self):       return int(getattr(self, '_w', 200))
+    def winfo_height(self):      return int(getattr(self, '_h', 100))
+    def winfo_screenwidth(self): return 1920
+    def winfo_screenheight(self): return 1080
+    def focus_set(self):
+        el = getattr(self, '_el', None)
+        if el:
+            try: el.focus()
+            except: pass
+    focus = focus_set
+
+# ── Widget base ───────────────────────────────────────────────────
+class Widget(Misc):
+    def __init__(self, parent, **kw):
+        self._id      = _nid()
+        self._parent  = parent
+        self._el      = None
+        self._kw      = dict(kw)
+        self._children = []
+        self._grid_rows = {}
+        if hasattr(parent, '_children'):
+            parent._children.append(self)
+
+    def _mk(self, tag='div'):
+        el = _js.document.createElement(tag)
+        el.id = self._id
+        el.style.boxSizing = 'border-box'
+        return el
+
+    def _par_el(self):
+        p = self._parent
+        if p is None: return _render()
+        if hasattr(p, '_content_el'): return p._content_el
+        el = getattr(p, '_el', None)
+        return el if el else _render()
+
+    def configure(self, **kw):
+        self._kw.update(kw)
+        if self._el: _apply_style(self._el, kw)
+    config = configure
+
+    def cget(self, k): return self._kw.get(k, '')
+    def _var_changed(self): pass
+
+    def pack(self, side='top', fill=None, expand=False, padx=0, pady=0, anchor='center', **kw):
+        par = self._par_el()
+        if not par or not self._el: return
+        if not par.style.display or par.style.display in ('', 'block'):
+            par.style.display      = 'flex'
+            par.style.flexDirection = 'column'
+            par.style.alignItems   = 'center'
+        s = (side or 'top').lower()
+        if s in ('left', 'right'):
+            par.style.flexDirection = 'row'
+            par.style.alignItems   = 'center'
+            par.style.flexWrap     = 'wrap'
+        def _px(v): return (str(v[0])+'px '+str(v[1])+'px') if isinstance(v, tuple) else (str(v)+'px')
+        if padx or pady:
+            self._el.style.margin = _px(pady) + ' ' + _px(padx)
+        if fill in ('x', 'both'): self._el.style.width  = '100%'
+        if fill in ('y', 'both'): self._el.style.height = '100%'
+        if expand: self._el.style.flex = '1'
+        par.appendChild(self._el)
+
+    def grid(self, row=0, column=0, padx=0, pady=0, sticky='', columnspan=1, rowspan=1, **kw):
+        par = self._par_el()
+        if not par or not self._el: return
+        rows = self._parent._grid_rows if hasattr(self._parent, '_grid_rows') else {}
+        rows.setdefault(row, {})[column] = True
+        if hasattr(self._parent, '_grid_rows'):
+            self._parent._grid_rows = rows
+        par.style.display      = 'grid'
+        mr = max(rows.keys())
+        mc = max(max(c.keys()) for c in rows.values())
+        par.style.gridTemplateRows    = ' '.join(['auto'] * (mr + 1))
+        par.style.gridTemplateColumns = ' '.join(['auto'] * (mc + 1))
+        par.style.alignItems   = 'center'
+        par.style.justifyItems = 'center'
+        self._el.style.gridRow    = str(row + 1) + ' / span ' + str(rowspan)
+        self._el.style.gridColumn = str(column + 1) + ' / span ' + str(columnspan)
+        def _m(v): return (str(v) + 'px') if v else '0'
+        self._el.style.margin = _m(pady) + ' ' + _m(padx)
+        sl = sticky.lower()
+        if 'e' in sl and 'w' in sl: self._el.style.width  = '100%'
+        if 'n' in sl and 's' in sl: self._el.style.height = '100%'
+        par.appendChild(self._el)
+
+    def place(self, x=0, y=0, width=None, height=None, **kw):
+        par = self._par_el()
+        if not par or not self._el: return
+        par.style.position        = 'relative'
+        self._el.style.position   = 'absolute'
+        self._el.style.left       = str(x) + 'px'
+        self._el.style.top        = str(y) + 'px'
+        if width:  self._el.style.width  = str(width)  + 'px'
+        if height: self._el.style.height = str(height) + 'px'
+        par.appendChild(self._el)
+
+# ── Tk (root window) ──────────────────────────────────────────────
+class Tk(Misc):
+    def __init__(self):
+        self._children  = []
+        self._grid_rows = {}
+        self._kw        = {}
+        self._w, self._h = 400, 300
+        # Clear the render div and build window chrome
+        r = _render()
+        r.innerHTML = ''
+        self._win = _js.document.createElement('div')
+        self._win.style.cssText = (
+            'display:inline-flex;flex-direction:column;'
+            'border-radius:6px;overflow:hidden;'
+            'box-shadow:0 6px 28px rgba(0,0,0,.65);min-width:200px;'
+        )
+        # Title bar
+        self._tb = _js.document.createElement('div')
+        self._tb.style.cssText = (
+            'background:#3c3c3c;color:#ddd;'
+            'font-family:Helvetica,Arial,sans-serif;'
+            'font-size:12px;font-weight:bold;padding:5px 12px;'
+            'user-select:none;flex-shrink:0;'
+        )
+        self._tb.textContent = 'tkinter'
+        self._win.appendChild(self._tb)
+        # Content area
+        self._el = _js.document.createElement('div')
+        self._content_el = self._el
+        self._el.style.cssText = (
+            'display:flex;flex-direction:column;align-items:center;'
+            'padding:8px;background:#f0f0f0;'
+        )
+        self._win.appendChild(self._el)
+        r.appendChild(self._win)
+
+    def title(self, t): self._tb.textContent = str(t)
+
+    def geometry(self, s):
+        try:
+            parts = str(s).split('x')
+            w = int(parts[0])
+            h = int(parts[1].split('+')[0])
+            self._w, self._h = w, h
+            self._win.style.width    = str(w) + 'px'
+            self._el.style.minHeight = str(h - 26) + 'px'
+        except: pass
+
+    def configure(self, **kw):
+        self._kw.update(kw)
+        bg = kw.get('bg', kw.get('background'))
+        if bg:
+            self._el.style.background  = str(bg)
+            self._win.style.background = str(bg)
+    config = configure
+
+    def resizable(self, w=True, h=True): pass
+    def minsize(self, w=0, h=0): pass
+    def maxsize(self, w=0, h=0): pass
+    def winfo_width(self):  return self._w
+    def winfo_height(self): return self._h
+
+# ── Label ─────────────────────────────────────────────────────────
+class Label(Widget):
+    def __init__(self, parent, text='', textvariable=None, image=None, **kw):
+        super().__init__(parent, text=text, **kw)
+        self._el = self._mk('div')
+        self._el.style.cssText = (
+            'font-family:Helvetica,Arial,sans-serif;'
+            'font-size:14px;padding:2px 4px;'
+        )
+        self._tv = textvariable
+        if textvariable:
+            textvariable._tw.append(self)
+            self._el.textContent = str(textvariable.get())
+        else:
+            self._el.textContent = str(text)
+        _apply_style(self._el, kw)
+
+    def _var_changed(self):
+        if self._tv and self._el:
+            self._el.textContent = str(self._tv.get())
+
+    def configure(self, **kw):
+        super().configure(**kw)
+        if 'text' in kw and self._el:
+            self._el.textContent = str(kw['text'])
+        if 'textvariable' in kw:
+            self._tv = kw['textvariable']
+            if self._tv:
+                self._tv._tw.append(self)
+                if self._el: self._el.textContent = str(self._tv.get())
+    config = configure
+
+# ── Button ────────────────────────────────────────────────────────
+class Button(Widget):
+    def __init__(self, parent, text='', command=None, **kw):
+        super().__init__(parent, text=text, **kw)
+        self._el = self._mk('button')
+        self._el.style.cssText = (
+            'font-family:Helvetica,Arial,sans-serif;font-size:14px;'
+            'padding:5px 14px;cursor:pointer;border:none;border-radius:3px;'
+            'background:#e0e0e0;color:#333;'
+        )
+        self._el.textContent = str(text)
+        self._cmd = command
+        if command:
+            def _click(e):
+                try: command()
+                except Exception as ex: print(ex)
+            p = _create_proxy(_click)
+            _proxies.append(p)
+            self._el.addEventListener('click', p)
+        _apply_style(self._el, kw)
+
+    def configure(self, **kw):
+        super().configure(**kw)
+        if 'text' in kw and self._el: self._el.textContent = str(kw['text'])
+        if 'command' in kw: self._cmd = kw['command']
+    config = configure
+
+    def invoke(self):
+        if self._cmd: self._cmd()
+
+# ── Entry ─────────────────────────────────────────────────────────
+class Entry(Widget):
+    def __init__(self, parent, textvariable=None, show=None, **kw):
+        super().__init__(parent, **kw)
+        self._el       = self._mk('input')
+        self._el.type  = 'password' if show == '*' else 'text'
+        self._el.style.cssText = (
+            'font-family:Helvetica,Arial,sans-serif;font-size:14px;'
+            'padding:4px 8px;border:1px solid #aaa;border-radius:3px;'
+            'outline:none;width:180px;background:#fff;color:#000;'
+        )
+        self._tv = textvariable
+        if textvariable:
+            textvariable._tw.append(self)
+            self._el.value = str(textvariable.get())
+            def _inp(e):
+                textvariable._v = self._el.value
+                for f in textvariable._cb:
+                    try: f()
+                    except: pass
+            p = _create_proxy(_inp)
+            _proxies.append(p)
+            self._el.addEventListener('input', p)
+        _apply_style(self._el, kw)
+
+    def get(self):
+        if self._tv: return str(self._tv.get())
+        return str(self._el.value) if self._el else ''
+
+    def set(self, v):
+        if self._el: self._el.value = str(v)
+
+    def delete(self, first, last=None):
+        if self._el: self._el.value = ''
+
+    def insert(self, idx, s):
+        if self._el:
+            v = self._el.value
+            i = len(v) if idx == 'end' else (idx if isinstance(idx, int) else len(v))
+            self._el.value = v[:i] + str(s) + v[i:]
+
+    def _var_changed(self):
+        if self._tv and self._el: self._el.value = str(self._tv.get())
+
+# ── Frame / LabelFrame / PanedWindow ─────────────────────────────
+class Frame(Widget):
+    def __init__(self, parent, **kw):
+        super().__init__(parent, **kw)
+        self._el = self._mk('div')
+        self._content_el = self._el
+        self._el.style.cssText = (
+            'display:flex;flex-wrap:wrap;'
+            'align-items:center;justify-content:center;'
+        )
+        _apply_style(self._el, kw)
+
+class LabelFrame(Frame):
+    def __init__(self, parent, text='', **kw):
+        super().__init__(parent, **kw)
+        self._el.style.border       = '1px solid #aaa'
+        self._el.style.padding      = '8px'
+        self._el.style.borderRadius = '4px'
+        if text:
+            leg = _js.document.createElement('div')
+            leg.style.cssText = (
+                'font-size:11px;font-weight:bold;margin-bottom:4px;'
+                'width:100%;font-family:Helvetica,Arial;'
+            )
+            leg.textContent = str(text)
+            self._el.insertBefore(leg, self._el.firstChild)
+
+class PanedWindow(Frame):
+    def __init__(self, parent, orient='horizontal', **kw):
+        super().__init__(parent, **kw)
+        self._el.style.flexDirection = 'row' if orient == 'horizontal' else 'column'
+    def add(self, w, **kw): w.pack()
+
+# ── Canvas ────────────────────────────────────────────────────────
+class Canvas(Widget):
+    def __init__(self, parent, width=400, height=300, bg='white',
+                 highlightthickness=2, **kw):
+        kw2 = dict(kw); kw2.setdefault('bg', bg)
+        super().__init__(parent, **kw2)
+        self._cw = int(width); self._ch = int(height)
+        self._el = self._mk('canvas')
+        self._el.width  = self._cw
+        self._el.height = self._ch
+        self._el.style.display = 'block'
+        if highlightthickness == 0: self._el.style.outline = 'none'
+        self._el.style.background = str(kw2.get('bg', 'white'))
+        self._ctx   = None
+        self._item_n = [0]
+        _apply_style(self._el, kw2)
+
+    def _cx(self):
+        if not self._ctx:
+            self._ctx = self._el.getContext('2d')
+        return self._ctx
+
+    def _ni(self):
+        self._item_n[0] += 1
+        return self._item_n[0]
+
+    def create_line(self, x1, y1, x2, y2, fill='black', width=1, **kw):
+        c = self._cx()
+        c.strokeStyle = str(fill or 'black')
+        c.lineWidth   = float(width)
+        c.beginPath(); c.moveTo(float(x1), float(y1))
+        c.lineTo(float(x2), float(y2)); c.stroke()
+        return self._ni()
+
+    def create_rectangle(self, x1, y1, x2, y2, fill='', outline='black', width=1, **kw):
+        c  = self._cx()
+        w2 = float(x2) - float(x1); h2 = float(y2) - float(y1)
+        if fill:    c.fillStyle = str(fill);    c.fillRect(float(x1), float(y1), w2, h2)
+        if outline: c.strokeStyle = str(outline); c.lineWidth = float(width); c.strokeRect(float(x1), float(y1), w2, h2)
+        return self._ni()
+
+    def create_oval(self, x1, y1, x2, y2, fill='', outline='black', width=1, **kw):
+        import math
+        c  = self._cx()
+        cx = (float(x1)+float(x2))/2; cy = (float(y1)+float(y2))/2
+        rx = abs(float(x2)-float(x1))/2; ry = abs(float(y2)-float(y1))/2
+        c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, 0, 2*math.pi)
+        if fill:    c.fillStyle   = str(fill);    c.fill()
+        if outline: c.strokeStyle = str(outline); c.lineWidth = float(width); c.stroke()
+        return self._ni()
+
+    def create_text(self, x, y, text='', fill='black', font=None, anchor='center', **kw):
+        c = self._cx()
+        c.fillStyle = str(fill or 'black')
+        if font:
+            f = _css_font(font)
+            if f: c.font = f['style']+' '+f['weight']+' '+f['size']+' '+f['family']
+        al = (anchor or 'center').lower()
+        c.textAlign    = ('center' if al in ('center','c') else
+                          'left'   if 'w' in al else
+                          'right'  if 'e' in al else 'center')
+        c.textBaseline = 'middle'
+        c.fillText(str(text), float(x), float(y))
+        return self._ni()
+
+    def create_polygon(self, *coords, fill='', outline='black', width=1, **kw):
+        c = self._cx(); pts = list(coords)
+        if len(pts) < 4: return self._ni()
+        c.beginPath(); c.moveTo(float(pts[0]), float(pts[1]))
+        for i in range(2, len(pts)-1, 2): c.lineTo(float(pts[i]), float(pts[i+1]))
+        c.closePath()
+        if fill:    c.fillStyle   = str(fill);    c.fill()
+        if outline: c.strokeStyle = str(outline); c.lineWidth = float(width); c.stroke()
+        return self._ni()
+
+    def create_arc(self, x1, y1, x2, y2, start=0, extent=90,
+                   fill='', outline='black', style=None, width=1, **kw):
+        import math
+        c  = self._cx()
+        cx = (float(x1)+float(x2))/2; cy = (float(y1)+float(y2))/2
+        rx = abs(float(x2)-float(x1))/2; ry = abs(float(y2)-float(y1))/2
+        sr = math.radians(-float(start)); er = math.radians(-float(start)-float(extent))
+        c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, sr, er, True)
+        if fill:    c.fillStyle   = str(fill);    c.fill()
+        if outline: c.strokeStyle = str(outline); c.lineWidth = float(width); c.stroke()
+        return self._ni()
+
+    def delete(self, item):
+        c = self._cx()
+        if str(item) == 'all':
+            c.clearRect(0, 0, self._cw, self._ch)
+            bg = self._kw.get('bg', self._kw.get('background', ''))
+            if bg: c.fillStyle = str(bg); c.fillRect(0, 0, self._cw, self._ch)
+
+    def itemconfig(self, item, **kw):  pass
+    itemconfigure = itemconfig
+    def tag_bind(self, tag, ev, cb):   pass
+    def coords(self, item, *a):        return []
+    def move(self, item, dx, dy):      pass
+    def scale(self, item, x, y, sx, sy): pass
+    def create_image(self, *a, **kw):  return self._ni()
+    def xview_moveto(self, f):         pass
+    def yview_moveto(self, f):         pass
+    def winfo_width(self):  return self._cw
+    def winfo_height(self): return self._ch
+
+    def configure(self, **kw):
+        super().configure(**kw)
+        bg = kw.get('bg', kw.get('background'))
+        if bg and self._el: self._el.style.background = str(bg)
+    config = configure
+
+# ── Text ──────────────────────────────────────────────────────────
+class Text(Widget):
+    def __init__(self, parent, width=40, height=10, **kw):
+        super().__init__(parent, **kw)
+        self._el = self._mk('textarea')
+        self._el.style.cssText = (
+            'font-family:monospace;font-size:13px;padding:4px;'
+            'border:1px solid #aaa;resize:both;border-radius:3px;outline:none;'
+        )
+        self._el.style.width  = str(width  * 8)  + 'px'
+        self._el.style.height = str(height * 18) + 'px'
+        _apply_style(self._el, kw)
+    def insert(self, idx, text):
+        if self._el: self._el.value += str(text)
+    def get(self, s='1.0', e='end'):
+        return self._el.value if self._el else ''
+    def delete(self, s, e=None):
+        if self._el: self._el.value = ''
+
+# ── Scrollbar ─────────────────────────────────────────────────────
+class Scrollbar(Widget):
+    def __init__(self, parent, orient='vertical', command=None, **kw):
+        super().__init__(parent, **kw)
+        self._el = self._mk('div')
+        self._el.style.display = 'none'
+    def set(self, *a): pass
+    def get(self):     return (0.0, 1.0)
+
+# ── Scale ─────────────────────────────────────────────────────────
+class Scale(Widget):
+    def __init__(self, parent, from_=0, to=100, orient='horizontal',
+                 variable=None, command=None, **kw):
+        super().__init__(parent, **kw)
+        self._el      = self._mk('input')
+        self._el.type = 'range'
+        self._el.min  = str(from_); self._el.max = str(to)
+        self._el.style.width = '200px'
+        if variable:
+            self._el.value = str(variable.get())
+            def _ch(e):
+                variable.set(type(variable.get())(self._el.value))
+                if command: command(self._el.value)
+            p = _create_proxy(_ch); _proxies.append(p)
+            self._el.addEventListener('input', p)
+        _apply_style(self._el, kw)
+    def get(self): return float(self._el.value) if self._el else 0
+    def set(self, v):
+        if self._el: self._el.value = str(v)
+
+# ── Spinbox ───────────────────────────────────────────────────────
+class Spinbox(Widget):
+    def __init__(self, parent, from_=0, to=100, textvariable=None, **kw):
+        super().__init__(parent, **kw)
+        self._el      = self._mk('input')
+        self._el.type = 'number'
+        self._el.min  = str(from_); self._el.max = str(to)
+        self._el.style.cssText = 'font-size:14px;padding:4px;border:1px solid #aaa;width:80px;'
+        self._tv = textvariable
+        if textvariable: self._el.value = str(textvariable.get())
+        _apply_style(self._el, kw)
+    def get(self):
+        return self._tv.get() if self._tv else (self._el.value if self._el else '')
+
+# ── Checkbutton ───────────────────────────────────────────────────
+class Checkbutton(Widget):
+    def __init__(self, parent, text='', variable=None, command=None, **kw):
+        super().__init__(parent, text=text, **kw)
+        self._el = self._mk('label')
+        self._el.style.cssText = (
+            'display:flex;align-items:center;gap:5px;cursor:pointer;'
+            'font-family:Helvetica,Arial;font-size:14px;'
+        )
+        cb = _js.document.createElement('input'); cb.type = 'checkbox'
+        sp = _js.document.createElement('span');  sp.textContent = str(text)
+        self._el.appendChild(cb); self._el.appendChild(sp)
+        if variable:
+            cb.checked = bool(variable.get())
+            def _ch(e):
+                variable.set(cb.checked)
+                if command: command()
+            p = _create_proxy(_ch); _proxies.append(p)
+            cb.addEventListener('change', p)
+        _apply_style(self._el, kw)
+
+# ── Radiobutton ───────────────────────────────────────────────────
+class Radiobutton(Widget):
+    def __init__(self, parent, text='', variable=None, value=None, command=None, **kw):
+        super().__init__(parent, text=text, **kw)
+        self._el = self._mk('label')
+        self._el.style.cssText = (
+            'display:flex;align-items:center;gap:5px;cursor:pointer;'
+            'font-family:Helvetica,Arial;font-size:14px;'
+        )
+        rb = _js.document.createElement('input'); rb.type = 'radio'
+        sp = _js.document.createElement('span');  sp.textContent = str(text)
+        self._el.appendChild(rb); self._el.appendChild(sp)
+        if variable:
+            rb.name    = 'rg' + str(id(variable))
+            rb.value   = str(value) if value is not None else ''
+            rb.checked = str(variable.get()) == str(value)
+            def _ch(e):
+                if rb.checked:
+                    variable.set(value)
+                    if command: command()
+            p = _create_proxy(_ch); _proxies.append(p)
+            rb.addEventListener('change', p)
+        _apply_style(self._el, kw)
+
+# ── OptionMenu ────────────────────────────────────────────────────
+class OptionMenu(Widget):
+    def __init__(self, parent, variable, *values, **kw):
+        super().__init__(parent, **kw)
+        self._el = self._mk('select')
+        self._el.style.cssText = 'font-size:13px;padding:4px 8px;border:1px solid #aaa;border-radius:3px;'
+        for v in values:
+            o = _js.document.createElement('option')
+            o.value = str(v); o.textContent = str(v)
+            if str(v) == str(variable.get()): o.selected = True
+            self._el.appendChild(o)
+        def _ch(e): variable.set(self._el.value)
+        p = _create_proxy(_ch); _proxies.append(p)
+        self._el.addEventListener('change', p)
+        _apply_style(self._el, kw)
+
+# ── Listbox ───────────────────────────────────────────────────────
+class Listbox(Widget):
+    def __init__(self, parent, selectmode='browse', height=5, **kw):
+        super().__init__(parent, **kw)
+        self._el          = self._mk('select')
+        self._el.multiple = selectmode in ('multiple', 'extended')
+        self._el.size     = height
+        self._el.style.cssText = (
+            'font-size:13px;padding:4px;border:1px solid #aaa;'
+            'width:150px;font-family:monospace;'
+        )
+        self._items = []
+        _apply_style(self._el, kw)
+    def insert(self, idx, *items):
+        for item in items:
+            o = _js.document.createElement('option')
+            o.textContent = str(item)
+            self._el.appendChild(o); self._items.append(str(item))
+    def delete(self, first, last=None): self._el.innerHTML = ''; self._items = []
+    def get(self, first=0, last=None):
+        if last is None:
+            return self._items[first] if 0 <= int(first) < len(self._items) else ''
+        return self._items[int(first):(int(last) if last != 'end' else None)]
+    def curselection(self): return tuple(i for i,o in enumerate(self._el.options) if o.selected)
+    def yview(self, *a): pass
+
+# ── messagebox / filedialog / colorchooser / font ─────────────────
+class messagebox:
+    @staticmethod
+    def showinfo(title='', message='', **kw):    _js.alert(str(message))
+    @staticmethod
+    def showwarning(title='', message='', **kw): _js.alert('Warning: ' + str(message))
+    @staticmethod
+    def showerror(title='', message='', **kw):   _js.alert('Error: ' + str(message))
+    @staticmethod
+    def askyesno(title='', message='', **kw):    return _js.confirm(str(message))
+    @staticmethod
+    def askokcancel(title='', message='', **kw): return _js.confirm(str(message))
+    @staticmethod
+    def askquestion(title='', message='', **kw):
+        return 'yes' if _js.confirm(str(message)) else 'no'
+
+class filedialog:
+    @staticmethod
+    def askopenfilename(**kw):   return ''
+    @staticmethod
+    def asksaveasfilename(**kw): return ''
+    @staticmethod
+    def askdirectory(**kw):      return ''
+
+class colorchooser:
+    @staticmethod
+    def askcolor(color='', **kw): return (None, None)
+
+class font:
+    @staticmethod
+    def Font(**kw): return kw
+    @staticmethod
+    def families(): return ['Helvetica','Arial','Times New Roman','Courier New']
+    @staticmethod
+    def nametofont(name): return {}
+
+# ── Register tkinter module ───────────────────────────────────────
+_m = _types.ModuleType('tkinter')
+for _n, _v in {
+    'Tk':Tk,'Frame':Frame,'LabelFrame':LabelFrame,'PanedWindow':PanedWindow,
+    'Label':Label,'Button':Button,'Entry':Entry,'Text':Text,
+    'Canvas':Canvas,'Scrollbar':Scrollbar,'Scale':Scale,
+    'Spinbox':Spinbox,'Checkbutton':Checkbutton,'Radiobutton':Radiobutton,
+    'OptionMenu':OptionMenu,'Listbox':Listbox,
+    'StringVar':StringVar,'IntVar':IntVar,'DoubleVar':DoubleVar,
+    'BooleanVar':BooleanVar,'Variable':Variable,
+    'messagebox':messagebox,'filedialog':filedialog,
+    'colorchooser':colorchooser,'font':font,
+    'mainloop': lambda n=0: None,
+    'BOTH':'both','X':'x','Y':'y','TOP':'top','BOTTOM':'bottom',
+    'LEFT':'left','RIGHT':'right','HORIZONTAL':'horizontal','VERTICAL':'vertical',
+    'CENTER':'center','N':'n','S':'s','E':'e','W':'w',
+    'NE':'ne','NW':'nw','SE':'se','SW':'sw',
+    'END':'end','INSERT':'insert','ALL':'all',
+    'WORD':'word','CHAR':'char','NORMAL':'normal',
+    'DISABLED':'disabled','HIDDEN':'hidden',
+    'FLAT':'flat','RAISED':'raised','SUNKEN':'sunken',
+    'GROOVE':'groove','RIDGE':'ridge',
+    'BROWSE':'browse','MULTIPLE':'multiple','EXTENDED':'extended',
+    'SINGLE':'single','ACTIVE':'active','LAST':'last',
+    'ARC':'arc','CHORD':'chord','PIESLICE':'pieslice',
+    'ROUND':'round','FIRST':'first',
+}.items():
+    setattr(_m, _n, _v)
+_sys.modules['tkinter'] = _m
+
+# ── ttk stub ──────────────────────────────────────────────────────
+_ttk = _types.ModuleType('tkinter.ttk')
+
+class _TtkStyle:
+    def theme_use(self, *a): pass
+    def configure(self, *a, **kw): pass
+_ttk.Style = _TtkStyle
+
+for _n in ['Frame','LabelFrame','Label','Button','Entry','Scrollbar',
+           'Spinbox','Scale','Checkbutton','Radiobutton','OptionMenu','PanedWindow']:
+    setattr(_ttk, _n, getattr(_m, _n, Widget))
+
+class Combobox(Entry):
+    def __init__(self, parent, values=(), **kw):
+        super().__init__(parent, **kw)
+        s = self._mk('select')
+        s.style.cssText = 'font-size:13px;padding:4px;border:1px solid #aaa;border-radius:3px;'
+        for v in values:
+            o = _js.document.createElement('option'); o.value=str(v); o.textContent=str(v)
+            s.appendChild(o)
+        self._el = s
+        _apply_style(self._el, kw)
+    def get(self): return self._el.value if self._el else ''
+    def set(self, v):
+        if self._el: self._el.value = str(v)
+
+class Treeview(Widget):
+    def __init__(self, parent, columns=(), show='headings', **kw):
+        super().__init__(parent, **kw)
+        self._el = self._mk('table')
+        self._el.style.cssText = 'border-collapse:collapse;font-size:13px;font-family:Helvetica,Arial;'
+        self._cols = columns
+        thead = _js.document.createElement('thead')
+        tbody = _js.document.createElement('tbody')
+        tr    = _js.document.createElement('tr')
+        if show == 'headings':
+            for col in columns:
+                th = _js.document.createElement('th'); th.textContent = str(col)
+                th.style.cssText = 'border:1px solid #ccc;padding:4px 8px;background:#eee;'
+                tr.appendChild(th)
+        thead.appendChild(tr); self._tbody = tbody
+        self._el.appendChild(thead); self._el.appendChild(tbody)
+        _apply_style(self._el, kw)
+    def insert(self, parent, idx, values=(), text='', **kw):
+        tr = _js.document.createElement('tr')
+        for v in values:
+            td = _js.document.createElement('td'); td.textContent = str(v)
+            td.style.cssText = 'border:1px solid #ddd;padding:3px 8px;'
+            tr.appendChild(td)
+        self._tbody.appendChild(tr); return str(id(tr))
+    def heading(self, col, text='', **kw): pass
+    def column(self, col, width=None, **kw): pass
+    def get_children(self, item=''): return []
+    def selection(self): return ()
+    def yview(self, *a): pass
+
+class Notebook(Widget):
+    def __init__(self, parent, **kw):
+        super().__init__(parent, **kw)
+        self._el = self._mk('div')
+        self._el.style.cssText = 'display:flex;flex-direction:column;'
+        self._tabs_el = _js.document.createElement('div')
+        self._tabs_el.style.cssText = 'display:flex;gap:2px;margin-bottom:4px;'
+        self._body_el = _js.document.createElement('div')
+        self._content_el = self._body_el
+        self._el.appendChild(self._tabs_el); self._el.appendChild(self._body_el)
+        _apply_style(self._el, kw)
+    def add(self, widget, text='', **kw):
+        btn = _js.document.createElement('button'); btn.textContent = str(text)
+        btn.style.cssText = 'padding:4px 10px;border:1px solid #aaa;cursor:pointer;border-radius:3px 3px 0 0;background:#ddd;'
+        self._tabs_el.appendChild(btn)
+        if widget._el: self._body_el.appendChild(widget._el)
+
+class Progressbar(Widget):
+    def __init__(self, parent, orient='horizontal', length=200,
+                 mode='determinate', variable=None, **kw):
+        super().__init__(parent, **kw)
+        self._el       = self._mk('progress')
+        self._el.max   = 100; self._el.value = 0
+        self._el.style.width = str(length) + 'px'
+        _apply_style(self._el, kw)
+    def start(self, interval=50): pass
+    def stop(self): pass
+    def step(self, amount=1): self._el.value = min(100, float(self._el.value) + amount)
+    def configure(self, **kw):
+        super().configure(**kw)
+        if 'value' in kw and self._el: self._el.value = float(kw['value'])
+    config = configure
+
+_ttk.Combobox   = Combobox
+_ttk.Treeview   = Treeview
+_ttk.Notebook   = Notebook
+_ttk.Progressbar = Progressbar
+
+_sys.modules['tkinter.ttk']          = _ttk
+_sys.modules['tkinter.messagebox']   = messagebox
+_sys.modules['tkinter.filedialog']   = filedialog
+_sys.modules['tkinter.colorchooser'] = colorchooser
+_sys.modules['tkinter.font']         = font
+`;
+
+async function ensureTkLoaded() {
+  if (tkLoaded) return true;
+  try {
+    printLine('⟳ Setting up tkinter mock…', 'info');
+    pyodide.runPython(TK_MOCK_PY);
+    tkLoaded = true;
+    printLine('✓ tkinter ready  •  GUI renders in the Canvas tab', 'info');
+    return true;
+  } catch (e) {
+    printLine('✗ tkinter setup failed: ' + (e.message || e), 'stderr');
+    return false;
+  }
+}
+
 async function runCode() {
   if (!pyodide || isRunning) return;
   isRunning = true;
@@ -1690,6 +2779,22 @@ async function runCode() {
   const code = editor.getValue();
   const t0 = performance.now();
   const NL = '\n';
+
+  // ── tkinter: lazy-load and switch to canvas tab ──────────────
+  const usesTk = hasTkinterImport(code);
+  if (usesTk) {
+    const ok = await ensureTkLoaded();
+    if (!ok) {
+      isRunning = false;
+      setStatus('error');
+      document.getElementById('run-btn').disabled = false;
+      return;
+    }
+    // Show GUI render area and switch tab
+    document.getElementById('tk-render').classList.add('visible');
+    document.getElementById('tk-placeholder').style.display = 'none';
+    switchOutputTab('canvas');
+  }
 
   // Build stdout/stderr capture – written as an array to avoid \n in literals
   const captureLines = [
@@ -1744,12 +2849,17 @@ async function runCode() {
     try { pyodide.runPython('import sys; sys.stdout.flush(); sys.stderr.flush(); sys.stdout=sys.__stdout__; sys.stderr=sys.__stderr__'); } catch(_){}
     const elapsed = (performance.now() - t0).toFixed(1);
     setStatus('ok');
-    printLine('✓ Done in ' + elapsed + 'ms', 'timing');
+    if (usesTk) {
+      printLine('✓ Done in ' + elapsed + 'ms  •  GUI is live in Canvas tab', 'timing');
+    } else {
+      printLine('✓ Done in ' + elapsed + 'ms', 'timing');
+    }
   } catch (e) {
     try { pyodide.runPython('import sys; sys.stdout=sys.__stdout__; sys.stderr=sys.__stderr__'); } catch(_){}
     const msg = e.message || String(e);
     msg.split('\n').forEach(l => { if (l) printLine(l, 'stderr'); });
     setStatus('error');
+    if (usesTk) switchOutputTab('terminal');  // show errors on terminal tab
   }
 
   // Clean up any dangling stdin input
